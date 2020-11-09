@@ -21,13 +21,23 @@ const GetPodiumInfoIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'GetPodiumInfo';
     },
     handle(handlerInput) {
-      const speechText = 'Get Podium Info called!';
-  
+      const speechText = "";
+      var year = handlerInput.requestEnvelope.request.intent.slots.year.value;
+      var round = handlerInput.requestEnvelope.request.intent.slots.round.value;
+
+      //does this even work?
+      var race = new F1.Race(year, round);
+      race.getResultInfo(getPodiumInfo(jsonData, year, round));
+
       return handlerInput.responseBuilder
         .speak(speechText)
         .getResponse();
     }
 };
+
+function getPodiumInfo(jsonData, year, round){
+  //Return handlerInput.responseBuilder ?
+}
 
 const ErrorHandler = {
     canHandle() {
