@@ -25,9 +25,10 @@ const GetPodiumInfoIntentHandler = {
       var year = handlerInput.requestEnvelope.request.intent.slots.year.value;
       var round = handlerInput.requestEnvelope.request.intent.slots.round.value;
 
-      //does this even work?
       var race = new F1.Race(year, round);
-      race.getResultInfo(getPodiumInfo(jsonData, year, round));
+      race.getResultInfo(getPodiumInfo);
+
+      speechText = "Test " + year;
 
       return handlerInput.responseBuilder
         .speak(speechText)
