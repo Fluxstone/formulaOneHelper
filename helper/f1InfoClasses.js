@@ -31,24 +31,18 @@ class Race{
         return URL;
     }
 
-    //requires callback function that has jsonData, year and round as argument
-    async getResultInfo(callback){
+    async getRaceFromDate(){
         try{
-            var response = await fetch(this.generateURL(this.year, this.raceNumber, 0))
-            await response.json().then(jsonData => callback(jsonData, this.year, this.raceNumber));
+            var response = await fetch(this.generateURL(this.year, this.raceNumber, 0));
+            var jsonData = await response.json();
+            return jsonData;
         } catch (e) {
             console.error(e);
         }
     }
 
-    //requires callback function that has jsonData as argument
-    async getQualifyingInfo(callback){
-        try{
-            var response = await fetch(this.generateURL(this.year, this.raceNumber, 1))
-            await response.json().then(jsonData => callback(jsonData, this.year, this.raceNumber));
-        } catch (e) {
-            console.error(e);
-        }
+    returnRaceInformation(){
+
     }
 };
 

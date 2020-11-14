@@ -20,28 +20,27 @@ const GetPodiumInfoIntentHandler = {
       return handlerInput.requestEnvelope.request.type === 'IntentRequest'
         && handlerInput.requestEnvelope.request.intent.name === 'GetPodiumInfo';
     },
-    handle(handlerInput) {
-      const speechText = "";
-      var year = handlerInput.requestEnvelope.request.intent.slots.year.value;
-      var round = handlerInput.requestEnvelope.request.intent.slots.round.value;
+    async handle(handlerInput) {
+      var speechText = "";
+      
+      const slots = handlerInput.requestEnvelope.request.intent.slots;
+      
+      var year = slots.year.value;
+      var round = slots.round.value;
 
       var race = new F1.Race(year, round);
-      race.getResultInfo(getPodiumInfo);
+      var speechText = await race.getResultInfo();
 
-      speechText = "Test " + year;
 
       return handlerInput.responseBuilder
         .speak(speechText)
+        .reprompt(speechText)
         .getResponse();
     }
 };
 
-function getPodiumInfo(jsonData, year, round){
-  //Return handlerInput.responseBuilder ?
-}
-
 const ErrorHandler = {
-    canHandle() {
+    canHandle(handlerInput) {
       return true;
     },
     handle(handlerInput, error) {
@@ -61,3 +60,4 @@ exports.handler = Alexa.SkillBuilders.custom()
     )
     .addErrorHandler(ErrorHandler)
     .lambda();
+    
