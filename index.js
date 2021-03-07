@@ -15,6 +15,11 @@ const LaunchRequestHandler = {
     }
 };
 
+/*
+*
+* All race-result related intent handler
+*
+*/
 const GetPodiumInfoWithDateIntentHandler = {
     canHandle(handlerInput) {
       return handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -74,9 +79,12 @@ const GetRaceTableWithDateIntentHandler = {
       var round = slots.round.value;
 
       var race = new F1.Race(year, round);
-      var recievedResponse = await race.getRaceTableAtTarget();
+      var recievedResponse = await race.getRaceTableAtTarget(0);
+            
+      setIntentContext(handlerInput, "GetRaceTable_ALL_RESULTS");
+      setRaceContext(handlerInput, year, round);
       
-      speechText = recievedResponse;
+      speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
       
 
       return handlerInput.responseBuilder
@@ -93,11 +101,14 @@ const GetRaceTableLatestIntentHandler = {
     },
     async handle(handlerInput) {
       var speechText = "";
-
-      var race = new F1.Race("current", "last");
-      var recievedResponse = await race.getRaceTableAtTarget();
+      setIntentContext(handlerInput, "GetRaceTable_ALL_RESULTS");
+      setRaceContext(handlerInput, "current", "last");
       
-      speechText = recievedResponse;
+      
+      var race = new F1.Race("current", "last");
+      var recievedResponse = await race.getRaceTableAtTarget(0);
+      
+      speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
       
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -157,6 +168,388 @@ const GetPlacementLatestIntentHandler = {
     }
 };
 
+/*
+*
+* All qualifying-result related intent handler
+*
+*/
+const GetQualifyingPodiumWithDateIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'GetQualifyingPodiumWithDate';
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+
+      const slots = handlerInput.requestEnvelope.request.intent.slots;
+
+      var year = slots.year.value;
+      var round = slots.round.value;
+      
+      var race = new F1.Race(year, round);
+      var recievedResponse = await race.getQualifyingPodiumInfo();
+      
+      speechText = recievedResponse;
+      
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+const GetQualifyingPodiumLatestIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'GetQualifyingPodiumLatest';
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+
+      var race = new F1.Race("current", "last");
+      var recievedResponse = await race.getQualifyingPodiumInfo();
+      
+      speechText = recievedResponse;
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+const GetQualifyingRaceTableLatestIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'GetQualifyingRaceTableLatest';
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+
+      var race = new F1.Race("current", "last");
+      var recievedResponse = await race.getQualifyingRaceTable(0);
+      
+      setIntentContext(handlerInput, "GetQualifyingRaceTable_ALL_RESULTS");
+      setRaceContext(handlerInput, "current", "last");
+      
+      speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+const GetQualifyingRaceTableWithDateIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'GetQualifyingRaceTableWithDate';
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+      
+      const slots = handlerInput.requestEnvelope.request.intent.slots;
+      
+      var year = slots.year.value;
+      var round = slots.round.value;
+      
+      setIntentContext(handlerInput, "GetQualifyingRaceTable_ALL_RESULTS");
+      setRaceContext(handlerInput, year, round);
+
+      var race = new F1.Race(year, round);
+      var recievedResponse = await race.getQualifyingRaceTable(0);
+      
+      
+      speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+/*
+*
+* All driver- and constructor standings related intent handler
+*
+*/
+const GetDriverStandingsTableLatestIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'GetDriverStandingsTableLatest';
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+      
+      setIntentContext(handlerInput, "GetDriverStandingsTable_ALL_RESULTS");
+      setStandingsContext(handlerInput, "current");
+      
+      var standings = new F1.Standings("current");
+      var recievedResponse = await standings.getDriverStandingsTable(0);
+      
+      speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+const GetDriverStandingsLeadersLatestIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'GetDriverStandingsLeadersLatest';
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+      
+      var standings = new F1.Standings("current");
+      var recievedResponse = await standings.getDriverStandingsLeaders();
+      
+      speechText = recievedResponse;
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+const GetDriverStandingsTableWithDateIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'GetDriverStandingsTableWithDate';
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+      
+      const slots = handlerInput.requestEnvelope.request.intent.slots;
+
+      var year = slots.year.value;
+      
+      setIntentContext(handlerInput, "GetDriverStandingsTable_ALL_RESULTS");
+      setStandingsContext(handlerInput, year);
+      
+      var standings = new F1.Standings(year);
+      var recievedResponse = await standings.getDriverStandingsTable(0);
+      
+      speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+const GetDriverStandingsPlacementLatestIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'GetDriverStandingsPlacementLatest';
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+      
+      const slots = handlerInput.requestEnvelope.request.intent.slots;
+
+      var placement = slots.placement.value;
+      
+      var standings = new F1.Standings("current");
+      var recievedResponse = await standings.getDriverStandingsPlacement(placement);
+      
+      speechText = recievedResponse;
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+//---Constructor Intents---
+const GetConstructorStandingsTableLatestIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'GetConstructorStandingsTableLatest';
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+      
+      var standings = new F1.Standings("current");
+      var recievedResponse = await standings.getConstructorStandingsTable();
+      
+      speechText = recievedResponse;
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+const GetConstructorStandingsLeadersLatestIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'GetConstructorStandingsLeadersLatest';
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+      
+      var standings = new F1.Standings("current");
+      var recievedResponse = await standings.getConstructorStandingsLeaders();
+      
+      speechText = recievedResponse;
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+const GetConstructorStandingsTableWithDateIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'GetConstructorStandingsTableWithDate';
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+      
+      const slots = handlerInput.requestEnvelope.request.intent.slots;
+
+      var year = slots.year.value;
+      
+      var standings = new F1.Standings(year);
+      var recievedResponse = await standings.getConstructorStandingsTable();
+      
+      speechText = recievedResponse;
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+const GetConstructorStandingsPlacementLatestIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'GetConstructorStandingsPlacementLatest';
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+      
+      const slots = handlerInput.requestEnvelope.request.intent.slots;
+
+      var placement = slots.placement.value;
+      
+      var standings = new F1.Standings("current");
+      var recievedResponse = await standings.getConstructorStandingsPlacement(placement);
+      
+      speechText = recievedResponse;
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+/*
+*
+* Yes and No Intents + Functions regarding context
+*
+*/
+function setIntentContext(handlerInput, context) {
+  const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+  sessionAttributes.targetContext = context;
+  handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
+}
+
+function setStandingsContext(handlerInput, year){
+  const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+  sessionAttributes.targetYear = year;
+  handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
+}
+
+function setRaceContext(handlerInput, year, round) {
+  const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+  sessionAttributes.targetYear = year;
+  sessionAttributes.targetRound = round;
+  handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
+}
+
+const YesIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.YesIntent'
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+      
+      const attributes = handlerInput.attributesManager.getSessionAttributes();
+      var currentContext = handlerInput.attributesManager.getSessionAttributes().targetContext;
+      
+      switch(attributes.targetContext){
+        case "GetRaceTable_ALL_RESULTS":
+          var race = new F1.Race(attributes.targetYear, attributes.targetRound);
+          var recievedResponse = await race.getRaceTableAtTarget(1);
+          speechText = recievedResponse;
+          
+          setIntentContext(handlerInput, null);
+          setRaceContext(handlerInput, null, null);
+          break;
+        case "GetQualifyingRaceTable_ALL_RESULTS":
+          var race = new F1.Race(attributes.targetYear, attributes.targetRound);
+          var recievedResponse = await race.getQualifyingRaceTable(1);
+          speechText = recievedResponse;
+          
+          setIntentContext(handlerInput, null);
+          setRaceContext(handlerInput, null, null);
+          break;
+        case "GetDriverStandingsTable_ALL_RESULTS":
+          var standings = new F1.Standings(attributes.targetYear);
+          var recievedResponse = await standings.getDriverStandingsTable(1);
+          speechText = recievedResponse;
+          
+          setIntentContext(handlerInput, null);
+          setRaceContext(handlerInput, null, null);
+          break;
+        default:
+          speechText = "Tut mir leid. Ich habe deine Frage nicht ganz verstanden. Bitte starte den Dialog erneut.";
+          break;
+      }
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+const NoIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.NoIntent';
+    },
+    async handle(handlerInput) {
+      var speechText = "";
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+/*
+*
+* Required Amazon Intent Handlers
+*
+*/
 const ErrorHandler = {
     canHandle(handlerInput) {
       return true;
@@ -171,6 +564,66 @@ const ErrorHandler = {
     },
 };
 
+
+const CancelIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.CancelIntent';
+    },
+    handle(handlerInput) {
+      var speechText = "CancelIntentHandler";
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+const HelpIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent';
+    },
+    handle(handlerInput) {
+      var speechText = "Du kannst mich zu verschiedenen Kategorien wie Renn- und Qualifyingergebnissen sowie Fahrer- und Konstrukteurstabellen befragen. Versuche es mal mit: Wer hat das letzte Rennen gewonnen? Wer wurde zehnter in Runde 4 in 2014? Wer führt die Konstrukteurs Tabelle in dieser Saison an? Bei weiteren Fragen schau auf der Website www.f1Helper.com nach.";
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
+const StopIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.StopIntent';
+    },
+    handle(handlerInput) {
+      var speechText = "Skill wird geschlossen. Bis zum nächsten mal!";
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .getResponse();
+    }
+};
+
+const FallbackIntentHandler = {
+    canHandle(handlerInput) {
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.FallbackIntent';
+    },
+    handle(handlerInput) {
+      var speechText = "Irgendetwas ist schief gelaufen! Bitte versuche es nochmal!";
+      
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .reprompt(speechText)
+        .getResponse();
+    }
+};
+
 exports.handler = Alexa.SkillBuilders.custom()
     .addRequestHandlers(
         LaunchRequestHandler,
@@ -179,8 +632,25 @@ exports.handler = Alexa.SkillBuilders.custom()
         GetRaceTableWithDateIntentHandler,
         GetRaceTableLatestIntentHandler,
         GetPlacementWithDateIntentHandler,
-        GetPlacementLatestIntentHandler
+        GetPlacementLatestIntentHandler,
+        GetQualifyingPodiumWithDateIntentHandler,
+        GetQualifyingPodiumLatestIntentHandler,
+        GetQualifyingRaceTableLatestIntentHandler,
+        GetQualifyingRaceTableWithDateIntentHandler,
+        GetDriverStandingsTableLatestIntentHandler,
+        GetDriverStandingsLeadersLatestIntentHandler,
+        GetDriverStandingsTableWithDateIntentHandler,
+        GetDriverStandingsPlacementLatestIntentHandler,
+        GetConstructorStandingsTableLatestIntentHandler,
+        GetConstructorStandingsLeadersLatestIntentHandler,
+        GetConstructorStandingsTableWithDateIntentHandler,
+        GetConstructorStandingsPlacementLatestIntentHandler,
+        YesIntentHandler,
+        NoIntentHandler,
+        CancelIntentHandler,
+        HelpIntentHandler,
+        StopIntentHandler,
+        FallbackIntentHandler
     )
     .addErrorHandler(ErrorHandler)
     .lambda();
-    
