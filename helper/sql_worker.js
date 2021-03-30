@@ -1,6 +1,5 @@
-const mysql = require('mysql');
-const util = require('util');
-const con = mysql.createConnection({
+const mysql = require('sync-mysql');
+const con = new mysql({
   host: "116.203.154.145",
   port: "3306",
   user: "root",
@@ -8,11 +7,6 @@ const con = mysql.createConnection({
   database: "f1db"
 });
 
-const query = util.promisify(con.query).bind(con);
-
-function createResponseArray(rows){
-  
-}
 
 function getRaceIdByYearAndRound(year, round, callback){
   con.connect(function(err) {
@@ -34,14 +28,17 @@ function getRaceIdByYearAndRound(year, round, callback){
   });
 }
 
-async function getRaceWinnersByRaceId(raceid){
-  var sqlQuery = "SELECT * FROM results WHERE raceid=1034 order by -position desc limit 3;";
-  const rows = await query(sqlQuery);
-  return rows;
-}
-async function func(){
-  var test = await getRaceWinnersByRaceId(3232);
-  console.log(test);
+
+
+function getRaceWinnersByRaceId(raceid){
+  var sqlQuery = `SELECT * FROM results WHERE raceid=${raceid} order by -position desc limit 3`;
+  const result = con.query(sqlQuery);
+  return result;
 }
 
-func();
+function getDriverNameFromId(driverId){}
+function getConstructorNameFromId(constructorId){}
+
+
+
+console.log(getRaceWinnersByRaceId(1034));

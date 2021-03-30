@@ -12,6 +12,7 @@
     "ask-sdk": "^2.10.0",
     "dotenv": "^8.2.0",
     "mysql": "^2.18.1",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "sync-mysql": "^3.0.1"
   }
 }
