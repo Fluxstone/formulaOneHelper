@@ -28,15 +28,22 @@ function getRaceIdByYearAndRound(year, round, callback){
   });
 }
 
-
-
 function getRaceWinnersByRaceId(raceid){
-  var sqlQuery = `SELECT * FROM results WHERE raceid=${raceid} order by -position desc limit 3`;
+  var sqlQuery = 
+  `select results.driverId, drivers.surname, drivers.forename 
+  from results 
+  inner join drivers ON results.driverId = drivers.driverid AND results.raceid=${raceid}
+  order by -position desc limit 3;`;
   const result = con.query(sqlQuery);
   return result;
 }
 
-function getDriverNameFromId(driverId){}
+function getDriverNameFromId(driverId){
+  var sqlQuery = `SELECT * FROM drivers WHERE driverid=${driverId}`;
+  const result = con.query();
+  return result;
+}
+
 function getConstructorNameFromId(constructorId){}
 
 
