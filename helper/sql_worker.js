@@ -8,25 +8,7 @@ const con = new mysql({
 });
 
 
-function getRaceIdByYearAndRound(year, round, callback){
-  con.connect(function(err) {
-    if (err){
-      console.log("MySQL connection error: " + err.stack);
-      process.exit(1);
-    } else {
-      var sqlQuery="SELECT raceid FROM races WHERE year=? AND round=?";
-    
-      con.query(sqlQuery, [year, round],function (err, rows, fields) {
-        // close connection first
-        con.end();
-        //Create Response Array
-
-        // done: call callback with results
-        callback(err, rows);
-      });
-    }
-  });
-}
+function getRaceIdByYearAndRound(year, round){}
 
 function getRaceWinnersByRaceId(raceid){
   var sqlQuery = 
@@ -46,6 +28,3 @@ function getDriverNameFromId(driverId){
 
 function getConstructorNameFromId(constructorId){}
 
-
-
-console.log(getRaceWinnersByRaceId(1034));
