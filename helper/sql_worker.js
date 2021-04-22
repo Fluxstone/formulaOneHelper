@@ -1,51 +1,56 @@
 const mysql = require('sync-mysql');
-const con = new mysql({
-  host: "116.203.154.145",
-  port: "3306",
-  user: "root",
-  password: "Baum1234,",
-  database: "f1db"
-});
+require('dotenv').config()
 
+class sql_worker {
+  constructor() {
+    this._connectToDB();
+  }
 
-function getRaceIdByYearAndRound(year, round, callback){
-  con.connect(function(err) {
-    if (err){
-      console.log("MySQL connection error: " + err.stack);
-      process.exit(1);
-    } else {
-      var sqlQuery="SELECT raceid FROM races WHERE year=? AND round=?";
-    
-      con.query(sqlQuery, [year, round],function (err, rows, fields) {
-        // close connection first
-        con.end();
-        //Create Response Array
+  _connectToDB() {
+    const con = new mysql({
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE
+    });
+    this.con = con;
+  }
 
-        // done: call callback with results
-        callback(err, rows);
-      });
-    }
-  });
+  getQualifyingWinnersByDate(year, round) {
+    var sqlQuery =
+      `select qualifying.driverId, drivers.forename, drivers.surname, qualifying.q1, qualifying.q2, qualifying.q3
+      from drivers
+      inner join qualifying on qualifying.driverId = drivers.driverId
+      inner join races on qualifying.raceId = races.raceId
+      and races.year=${year} and races.round=${round};`;
+    const result = this.con.query(sqlQuery);
+    return result;
+  }
+
+  getRaceWinnersByRaceId(raceid) {
+    var sqlQuery =
+      `select results.driverId, drivers.surname, drivers.forename 
+    from results 
+    inner join drivers ON results.driverId = drivers.driverid AND results.raceid=${raceid}
+    order by -position desc limit 3;`;
+    const result = this.con.query(sqlQuery);
+    return result;
+  }
+
+  getRaceIdByYearAndRound(year, round) {
+    var sqlQuery =
+      `SELECT raceid FROM races WHERE year=${year} AND round=${round}`;
+    const result = this.con.query(sqlQuery);
+    return result;
+  }
+
+  getDriverNameFromId(driverId) {
+    var sqlQuery = `SELECT * FROM drivers WHERE driverid=${driverId}`;
+    const result = this.con.query();
+    return result;
+  }
 }
 
-function getRaceWinnersByRaceId(raceid){
-  var sqlQuery = 
-  `select results.driverId, drivers.surname, drivers.forename 
-  from results 
-  inner join drivers ON results.driverId = drivers.driverid AND results.raceid=${raceid}
-  order by -position desc limit 3;`;
-  const result = con.query(sqlQuery);
-  return result;
-}
-
-function getDriverNameFromId(driverId){
-  var sqlQuery = `SELECT * FROM drivers WHERE driverid=${driverId}`;
-  const result = con.query();
-  return result;
-}
-
-function getConstructorNameFromId(constructorId){}
-
-
-
-console.log(getRaceWinnersByRaceId(1034));
+var helper = new sql_worker();
+console.log(helper.getRaceWinnersByRaceId(1034));
