@@ -17,7 +17,7 @@ class sql_worker {
     this.con = con;
   }
 
-  getQualifyingWinnersByDate(year, round) {
+  getQualifyingTopThreeByDate(year, round) {
     var sqlQuery =
       `select qualifying.driverId, drivers.forename, drivers.surname, qualifying.q1, qualifying.q2, qualifying.q3
       from drivers
@@ -28,7 +28,7 @@ class sql_worker {
     return result;
   }
 
-  getRaceWinnersByRaceId(raceid) {
+  getRaceTopThreeByRaceId(raceid) {
     var sqlQuery =
       `select results.driverId, drivers.surname, drivers.forename 
     from results 
