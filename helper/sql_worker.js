@@ -62,53 +62,99 @@ class sql_worker {
     return result;
   }
 
-  getRacePlacementByDate(year, round) {
-    var sqlQuery =
-      ``;
-    const result = this.con.query(sqlQuery);
+  getRacePlacementByDate(year, round, placement) {
+    var raceId = this.getRaceIdByYearAndRound(year, round);
+    var arr_raceStandings = this.getRaceTableByRaceId(raceId[0].raceid);
+    var result = arr_raceStandings[placement - 1];
     return result;
   }
 
   //SQL-Calls about Driver Standings
   getDriverStandingsTableByYear(year) {
+    var raceId = this.getRaceIdByYear(year);
+    raceId = raceId[0].raceId;
+
     var sqlQuery =
-      ``;
+      `select drivers.driverId, drivers.forename, drivers.surname, driverStandings.driverId, driverStandings.points,  driverStandings.position, races.raceId
+      from driverStandings
+      inner join drivers on drivers.driverId = driverStandings.driverId
+      inner join races on races.raceId = driverStandings.raceId
+      and races.raceId=${raceId}
+      order by -position desc`;
     const result = this.con.query(sqlQuery);
     return result;
   }
 
   getDriverStandingsLeadersByYear(year) {
+    var raceId = this.getRaceIdByYear(year);
+    raceId = raceId[0].raceId;
+
     var sqlQuery =
-      ``;
+      `select drivers.driverId, drivers.forename, drivers.surname, driverStandings.driverId, driverStandings.points,  driverStandings.position, races.raceId
+      from driverStandings
+      inner join drivers on drivers.driverId = driverStandings.driverId
+      inner join races on races.raceId = driverStandings.raceId
+      and races.raceId=${raceId} 
+      order by -position desc limit 3;`;
     const result = this.con.query(sqlQuery);
     return result;
   }
 
-  getDriverStandingsPlacementByYear(placement, year) {
+  getDriverStandingsPlacementByYear(year, placement) {
+    var raceId = this.getRaceIdByYear(year);
+    raceId = raceId[0].raceId;
+
     var sqlQuery =
-      ``;
+      `select drivers.driverId, drivers.forename, drivers.surname, driverStandings.driverId, driverStandings.points,  driverStandings.position, races.raceId
+      from driverStandings
+      inner join drivers on drivers.driverId = driverStandings.driverId
+      inner join races on races.raceId = driverStandings.raceId
+      and races.raceId=${raceId}  and position = ${placement} 
+      order by -position desc;`;
     const result = this.con.query(sqlQuery);
     return result;
   }
 
   //SQL-Calls about Constructor Standings
   getConstructorsTableByYear(year) {
+    var raceId = this.getRaceIdByYear(year);
+    raceId = raceId[0].raceId;
+
     var sqlQuery =
-      ``;
+      `select constructors.constructorId, constructors.name, constructorStandings.constructorId, constructorStandings.points,  constructorStandings.position, races.raceId
+      from constructorStandings
+      inner join constructors on constructors.constructorId = constructorStandings.constructorId
+      inner join races on races.raceId = constructorStandings.raceId
+      and races.raceId=${raceId}
+      order by -position desc;`;
     const result = this.con.query(sqlQuery);
     return result;
   }
 
   getConstructorsLeadersByYear(year) {
     var sqlQuery =
-      ``;
+      `select constructors.constructorId, constructors.name, constructorStandings.constructorId, constructorStandings.points,  constructorStandings.position, races.raceId
+      from constructorStandings
+      inner join constructors on constructors.constructorId = constructorStandings.constructorId
+      inner join races on races.raceId = constructorStandings.raceId
+      and races.raceId=${year}
+      order by -position desc limit 3;`;
     const result = this.con.query(sqlQuery);
     return result;
   }
 
-  getConstructorsPlacementByYear(placement, year) {
+  getConstructorsPlacementByYear(year, placement) {
+    var raceId = this.getRaceIdByYear(year);
+    raceId = raceId[0].raceId;
+
     var sqlQuery =
-      ``;
+      `select constructors.constructorId, constructors.name, constructorStandings.constructorId, constructorStandings.points,  constructorStandings.position, races.raceId
+      from constructorStandings
+      inner join constructors on constructors.constructorId = constructorStandings.constructorId
+      inner join races on races.raceId = constructorStandings.raceId
+      and races.raceId=${raceId} and position = ${placement}
+      order by -position desc;`;
+
     const result = this.con.query(sqlQuery);
     return result;
   }
@@ -121,12 +167,24 @@ class sql_worker {
     return result;
   }
 
+  //Will fetch latest race in that year
+  getRaceIdByYear(year) {
+    var sqlQuery =
+      `select raceId
+      from races
+      where year = ${year} and date < CURDATE()
+      order by -round asc limit 1;`;
+    const result = this.con.query(sqlQuery);
+    return result;
+  }
+
   getDriverNameFromId(driverId) {
     var sqlQuery = `SELECT * FROM drivers WHERE driverid=${driverId}`;
-    const result = this.con.query();
+    const result = this.con.query(sqlQuery);
     return result;
   }
 }
 
 var helper = new sql_worker();
-console.log(helper.getRaceWinnersByRaceId(1034));
+console.log(helper.getDriverStandingsPlacementByYear(2021,3));
+
