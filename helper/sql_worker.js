@@ -187,3 +187,4 @@ class sql_worker {
 
 var helper = new sql_worker();
 console.log(helper.getDriverStandingsPlacementByYear(2021,3));
+
