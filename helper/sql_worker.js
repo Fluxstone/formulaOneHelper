@@ -1,7 +1,7 @@
 const mysql = require('sync-mysql');
 require('dotenv').config()
 
-class sql_worker {
+class Sql_Worker {
   constructor() {
     this._connectToDB();
   }
@@ -44,7 +44,7 @@ class sql_worker {
   //SQL-Calls about RACEDAY
   getRaceTopThreeByRaceId(raceid) {
     var sqlQuery =
-      `select results.driverId, drivers.surname, drivers.forename 
+      `select results.driverId, results.position, drivers.surname, drivers.forename  
       from results 
       inner join drivers ON results.driverId = drivers.driverid AND results.raceid=${raceid}
       order by -position desc limit 3;`;
@@ -185,6 +185,8 @@ class sql_worker {
   }
 }
 
-var helper = new sql_worker();
-console.log(helper.getDriverStandingsPlacementByYear(2021,3));
-
+var helper = new Sql_Worker();
+//console.log(helper.getRaceIdByYearAndRound(2021,10));
+module.exports = {
+  Sql_Worker
+};

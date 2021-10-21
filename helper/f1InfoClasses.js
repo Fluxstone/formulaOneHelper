@@ -1,9 +1,31 @@
 const fetch = require('node-fetch');
+const SQL = require("./sql_worker");
+
+const sqlWorker = new SQL.Sql_Worker();
 
 class Race{
     constructor(year, round){
         this.year = year;
         this.raceNumber = round;
+    }
+
+    async getSeasonInfo(){
+        try{
+            
+            var response = await fetch(this.generateURL(this.year, this.raceNumber, 0));
+            var jsonData = await response.json();
+
+            console.log(jsonData);
+
+            var obj = {
+                targetYear: jsonData.MRData.RaceTable.season,
+                targetRound: jsonData.MRData.RaceTable.round,
+
+            };
+            return obj;
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     generateURL(year, round, mode){
@@ -30,23 +52,29 @@ class Race{
 
     async getPodiumInfoAtTarget(){
         try{
+            var seasonInfo = this.getSeasonInfo();
+            var raceYear = (await seasonInfo).targetYear;
+            var raceRound = (await seasonInfo).targetRound;
+
+            //console.log(raceYear + " " + raceRound);
+
+            var raceId = sqlWorker.getRaceIdByYearAndRound(raceYear, raceRound)[0].raceid;
+            //console.log(raceId);
+            var jsonData = sqlWorker.getRaceTopThreeByRaceId(raceId); //1061 2021 10
+            //console.log(jsonData);
+            
             var textToSpeech = "";
+
+            var firstPlaceDriver = jsonData[0];
+            var secondPlaceDriver = jsonData[1];
+            var thirdPlaceDriver = jsonData[2];
             
-            var response = await fetch(this.generateURL(this.year, this.raceNumber, 0));
-            var jsonData = await response.json();
-            
-            var response = "";
-            
-            var firstPlaceDriver = jsonData.MRData.RaceTable.Races[0].Results[0].Driver;
-            var secondPlaceDriver = jsonData.MRData.RaceTable.Races[0].Results[1].Driver;
-            var thirdPlaceDriver = jsonData.MRData.RaceTable.Races[0].Results[2].Driver;
-            
-            var firstPlaceDriver_NAME = firstPlaceDriver.givenName + " " + firstPlaceDriver.familyName;
-            var secondPlaceDriver_NAME = secondPlaceDriver.givenName + " " + secondPlaceDriver.familyName;
-            var thirdPlaceDriver_NAME = thirdPlaceDriver.givenName + " " + thirdPlaceDriver.familyName;
+            var firstPlaceDriver_NAME = firstPlaceDriver.forename + " " + firstPlaceDriver.surname;
+            var secondPlaceDriver_NAME = secondPlaceDriver.forename + " " + secondPlaceDriver.surname;
+            var thirdPlaceDriver_NAME = thirdPlaceDriver.forename + " " + thirdPlaceDriver.surname;
             
             textToSpeech = "Erster wurde " + firstPlaceDriver_NAME + ", gefolgt von " + secondPlaceDriver_NAME + " auf dem zweiten Platz während " + thirdPlaceDriver_NAME + " den dritten Platz belegte.";
-            
+            console.log(textToSpeech);
             return textToSpeech;
         } catch (e) {
             console.error(e);
@@ -327,6 +355,15 @@ class Standings{
     }
 }
 
+
+/*var race = new Race("current","last");
+const foo = async () => {
+    var response = await race.getPodiumInfoAtTarget();
+    console.log(response);
+}
+
+foo();
+*/
 module.exports = {
     Race,
     Standings

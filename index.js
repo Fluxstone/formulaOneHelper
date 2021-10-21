@@ -1,6 +1,7 @@
 const Alexa = require('ask-sdk-core');
 const F1 = require("./helper/f1InfoClasses");
 
+
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
       return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
