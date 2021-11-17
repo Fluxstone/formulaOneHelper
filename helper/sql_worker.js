@@ -1,5 +1,14 @@
 const mysql = require('sync-mysql');
+
+const dotenv = require('dotenv')
+const path = require('path')
+
 require('dotenv').config()
+
+dotenv.config({ path: path.join(__dirname, '../.env') })
+
+
+console.log(process.env.DB_HOST);
 
 class Sql_Worker {
   constructor() {
@@ -37,6 +46,26 @@ class Sql_Worker {
       inner join qualifying on qualifying.driverId = drivers.driverId
       inner join races on qualifying.raceId = races.raceId
       and races.year=${year} and races.round=${round};`;
+    const result = this.con.query(sqlQuery);
+    return result;
+  }
+
+  getQualifyingTopThreeByRaceId(raceid) {
+    var sqlQuery =
+      `select qualifying.driverId, qualifying.position, drivers.surname, drivers.forename, qualifying.q1, qualifying.q2, qualifying.q3
+      from qualifying 
+      inner join drivers ON qualifying.driverId = drivers.driverid AND qualifying.raceid=${raceid}
+      order by -position desc limit 3;`;
+    const result = this.con.query(sqlQuery);
+    return result;
+  }
+
+  getQualifyingTableByRaceId(raceid) {
+    var sqlQuery =
+      `select qualifying.driverId, drivers.surname, drivers.forename 
+      from qualifying 
+      inner join drivers ON qualifying.driverId = drivers.driverid AND qualifying.raceid=${raceid}
+      order by -position desc;`;
     const result = this.con.query(sqlQuery);
     return result;
   }
@@ -132,12 +161,14 @@ class Sql_Worker {
   }
 
   getConstructorsLeadersByYear(year) {
+    var raceId = this.getRaceIdByYear(year);
+    raceId = raceId[0].raceId;
     var sqlQuery =
       `select constructors.constructorId, constructors.name, constructorStandings.constructorId, constructorStandings.points,  constructorStandings.position, races.raceId
       from constructorStandings
       inner join constructors on constructors.constructorId = constructorStandings.constructorId
       inner join races on races.raceId = constructorStandings.raceId
-      and races.raceId=${year}
+      and races.raceId=${raceId}
       order by -position desc limit 3;`;
     const result = this.con.query(sqlQuery);
     return result;
