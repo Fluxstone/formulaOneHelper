@@ -1,4 +1,7 @@
 const fetch = require('node-fetch');
+const SQL = require("./sql_worker");
+
+const sqlWorker = new SQL.Sql_Worker();
 
 class Race{
     constructor(year, round){
@@ -6,6 +9,28 @@ class Race{
         this.raceNumber = round;
     }
 
+    //Fetch year and round of a given Season. Required for some calls
+    //Will always fetch last round
+    async getSeasonInfo(){
+        try{
+            let jsonData = sqlWorker.getLastRace()
+
+
+            console.log(jsonData);
+
+            var obj = {
+                targetYear: jsonData[0].year,
+                targetRound: jsonData[0].round,
+            };
+
+            console.log(obj);
+            return obj;
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    //Generate a URL to Query the ergast Website. Depricated
     generateURL(year, round, mode){
         /*
         * MODE
@@ -28,25 +53,41 @@ class Race{
         return URL;
     }
 
+    //Get Podium places
     async getPodiumInfoAtTarget(){
         try{
+            if(this.year=="current" && this.round=="last")
+            {
+                var seasonInfo = this.getSeasonInfo();
+                var raceYear = (await seasonInfo).targetYear;
+                var raceRound = (await seasonInfo).targetRound;
+            }
+            else
+            {
+                raceYear = this.year;
+                raceRound= this.raceNumber;
+            }
+
+            
+            //console.log(raceYear + " " + raceRound);
+
+            var raceId = sqlWorker.getRaceIdByYearAndRound(raceYear, raceRound)[0].raceid;
+            //console.log(raceId);
+            var jsonData = await sqlWorker.getRaceTopThreeByRaceId(raceId); //1061 2021 10
+            //console.log("Json Data" + jsonData);
+            
             var textToSpeech = "";
+
+            var firstPlaceDriver = jsonData[0];
+            var secondPlaceDriver = jsonData[1];
+            var thirdPlaceDriver = jsonData[2];
             
-            var response = await fetch(this.generateURL(this.year, this.raceNumber, 0));
-            var jsonData = await response.json();
-            
-            var response = "";
-            
-            var firstPlaceDriver = jsonData.MRData.RaceTable.Races[0].Results[0].Driver;
-            var secondPlaceDriver = jsonData.MRData.RaceTable.Races[0].Results[1].Driver;
-            var thirdPlaceDriver = jsonData.MRData.RaceTable.Races[0].Results[2].Driver;
-            
-            var firstPlaceDriver_NAME = firstPlaceDriver.givenName + " " + firstPlaceDriver.familyName;
-            var secondPlaceDriver_NAME = secondPlaceDriver.givenName + " " + secondPlaceDriver.familyName;
-            var thirdPlaceDriver_NAME = thirdPlaceDriver.givenName + " " + thirdPlaceDriver.familyName;
+            var firstPlaceDriver_NAME = firstPlaceDriver.forename + " " + firstPlaceDriver.surname;
+            var secondPlaceDriver_NAME = secondPlaceDriver.forename + " " + secondPlaceDriver.surname;
+            var thirdPlaceDriver_NAME = thirdPlaceDriver.forename + " " + thirdPlaceDriver.surname;
             
             textToSpeech = "Erster wurde " + firstPlaceDriver_NAME + ", gefolgt von " + secondPlaceDriver_NAME + " auf dem zweiten Platz während " + thirdPlaceDriver_NAME + " den dritten Platz belegte.";
-            
+            //console.log(textToSpeech);
             return textToSpeech;
         } catch (e) {
             console.error(e);
@@ -60,11 +101,29 @@ class Race{
         * Mode = 1: All entries starting from 11
         */
         try{
-            var response = await fetch(this.generateURL(this.year, this.raceNumber, 0));
-            var jsonData = await response.json();
+            //var response = await fetch(this.generateURL(this.year, this.raceNumber, 0));
+           //var jsonData = await response.json();
             
             var response = "";
+
+            if(this.year=="current" && this.round=="last")
+            {
+                var seasonInfo = this.getSeasonInfo();
+                var raceYear = (await seasonInfo).targetYear;
+                var raceRound = (await seasonInfo).targetRound;
+            }
+            else
+            {
+                raceYear = this.year;
+                raceRound= this.raceNumber;
+            }
             
+            var raceId = sqlWorker.getRaceIdByYearAndRound(raceYear, raceRound)[0].raceid;
+            //console.log(raceId);
+            var jsonData = sqlWorker.getRaceTableByRaceId(raceId); //1061 2021 10
+            //console.log(jsonData);
+
+
             //Depending on mode either the first 10 entries will be read or all the remaining ones
             var startAtDriver, countTillDriver;
             if(mode == 0){
@@ -76,8 +135,8 @@ class Race{
             }
             
             for (var i = startAtDriver; i<countTillDriver; i++){
-                var driver_firstName = jsonData.MRData.RaceTable.Races[0].Results[i].Driver.givenName;
-                var driver_lastName = jsonData.MRData.RaceTable.Races[0].Results[i].Driver.familyName;
+                var driver_firstName = jsonData[i].forename;
+                var driver_lastName = jsonData[i].surname;  
                 
                 var i_ranking = i+1;
                 
@@ -91,10 +150,17 @@ class Race{
     
     async getPlacementAtTarget(placement){
         try{
-            var response = await fetch(this.generateURL(this.year, this.raceNumber, 0));
-            var jsonData = await response.json();
+            //var response = await fetch(this.generateURL(this.year, this.raceNumber, 0));
+            //var jsonData = await response.json();
+
+            var seasonInfo = this.getSeasonInfo();
+            var raceYear = (await seasonInfo).targetYear;
+            var raceRound = (await seasonInfo).targetRound;
+
+            var driver = sqlWorker.getRacePlacementByDate(raceYear, raceRound, placement);
+            //console.log(placement);
             
-            var driver = jsonData.MRData.RaceTable.Races[0].Results[placement-1].Driver.givenName + " " + jsonData.MRData.RaceTable.Races[0].Results[placement-1].Driver.familyName;
+            var driver = driver.forename + " " + driver.surname;
             var response = "Platz " + placement + " belegt " + driver;
             
             return response;
@@ -104,25 +170,31 @@ class Race{
     }
     
     async getQualifyingPodiumInfo(){
-        try{
+        try{            
+            var seasonInfo = this.getSeasonInfo();
+            var raceYear = (await seasonInfo).targetYear;
+            var raceRound = (await seasonInfo).targetRound;
+
+            //console.log(raceYear + " " + raceRound);
+
+            var raceId = sqlWorker.getRaceIdByYearAndRound(raceYear, raceRound)[0].raceid;
+            //console.log(raceId);
+            var jsonData = sqlWorker.getQualifyingTopThreeByRaceId(raceId); //1061 2021 10
+            console.log(jsonData);
+            
             var textToSpeech = "";
+
+            var firstPlaceDriver = jsonData[0];
+            var secondPlaceDriver = jsonData[1];
+            var thirdPlaceDriver = jsonData[2];
             
-            var response = await fetch(this.generateURL(this.year, this.raceNumber, 1));
-            var jsonData = await response.json();
+            var firstPlaceDriver_NAME = firstPlaceDriver.forename + " " + firstPlaceDriver.surname;
+            var secondPlaceDriver_NAME = secondPlaceDriver.forename + " " + secondPlaceDriver.surname;
+            var thirdPlaceDriver_NAME = thirdPlaceDriver.forename + " " + thirdPlaceDriver.surname;
             
-            var response = "";
-            
-            var firstPlaceDriver = jsonData.MRData.RaceTable.Races[0].QualifyingResults[0];
-            var secondPlaceDriver = jsonData.MRData.RaceTable.Races[0].QualifyingResults[1];
-            var thirdPlaceDriver = jsonData.MRData.RaceTable.Races[0].QualifyingResults[2];
-            
-            var firstPlaceDriver_NAME = firstPlaceDriver.Driver.givenName + " " + firstPlaceDriver.Driver.familyName;
-            var secondPlaceDriver_NAME = secondPlaceDriver.Driver.givenName + " " + secondPlaceDriver.Driver.familyName;
-            var thirdPlaceDriver_NAME = thirdPlaceDriver.Driver.givenName + " " + thirdPlaceDriver.Driver.familyName;
-            
-            textToSpeech = "Erster wurde im Qualifying " + firstPlaceDriver_NAME + " mit einer Zeit von " + firstPlaceDriver.Q3 + 
-            ", gefolgt von " + secondPlaceDriver_NAME + " mit einer Zeit von " + secondPlaceDriver.Q3 + " auf dem zweiten Platz während " 
-            + thirdPlaceDriver_NAME + " den dritten Platz mit einer Zeit von " + thirdPlaceDriver.Q3 + " belegte.";
+            textToSpeech = "Erster wurde im Qualifying " + firstPlaceDriver_NAME + " mit einer Zeit von " + firstPlaceDriver.q3 + 
+            ", gefolgt von " + secondPlaceDriver_NAME + " mit einer Zeit von " + secondPlaceDriver.q3 + " auf dem zweiten Platz während " 
+            + thirdPlaceDriver_NAME + " den dritten Platz mit einer Zeit von " + thirdPlaceDriver.q3 + " belegte.";
             
             return textToSpeech;
         } catch (e){
@@ -132,30 +204,38 @@ class Race{
     
     async getQualifyingRaceTable(mode){
         try{
+            var response = "";
+
+            var seasonInfo = this.getSeasonInfo();
+            var raceYear = (await seasonInfo).targetYear;
+            var raceRound = (await seasonInfo).targetRound;
+            
+            var raceId = sqlWorker.getRaceIdByYearAndRound(raceYear, raceRound)[0].raceid;
+            //console.log(raceId);
+            var jsonData = sqlWorker.getQualifyingTableByRaceId(raceId); //1061 2021 10
+            console.log(jsonData);
+            
             var textToSpeech = "";
             
-            var response = await fetch(this.generateURL(this.year, this.raceNumber, 1));
-            var jsonData = await response.json();
-            
-            var response = "";
-            
+            //Depending on mode either the first 10 entries will be read or all the remaining ones
             var startAtDriver, countTillDriver;
             if(mode == 0){
                 startAtDriver = 0;
                 countTillDriver = 10;
             } else if (mode == 1){
                 startAtDriver = 10;
-                countTillDriver = jsonData.MRData.RaceTable.Races[0].QualifyingResults.length;
+                countTillDriver = jsonData.MRData.RaceTable.Races[0].Results.length;
             }
             
             for (var i = startAtDriver; i<countTillDriver; i++){
-                var driver_firstName = jsonData.MRData.RaceTable.Races[0].QualifyingResults[i].Driver.givenName;
-                var driver_lastName = jsonData.MRData.RaceTable.Races[0].QualifyingResults[i].Driver.familyName;
+                var driver_firstName = jsonData[i].forename;
+                var driver_lastName = jsonData[i].surname;  
                 
                 var i_ranking = i+1;
                 
-                textToSpeech = textToSpeech + "Platz " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
+                response = response + "Platz " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
             }
+            textToSpeech = response;
             return textToSpeech;
         } catch (e) {
             console.error(e);
@@ -166,6 +246,22 @@ class Race{
 class Standings{
     constructor(year){
         this.year = year;
+    }
+
+    //Fetch year and round of a given Season. Required for some calls
+    async getSeasonYear(){
+        try{
+                
+            var response = await fetch(this.generateURL(this.year, 0));
+            var jsonData = await response.json();
+            var standingsYear = jsonData.MRData.StandingsTable.season;
+
+            //console.log(jsonData.MRData.StandingsTable.season);
+    
+            return standingsYear;
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     generateURL(year, mode){
@@ -192,10 +288,18 @@ class Standings{
     
     async getDriverStandingsTable(mode){
          try{
-            var textToSpeech = "";
             
-            var response = await fetch(this.generateURL(this.year, 0));
-            var jsonData = await response.json();
+            
+            //var response = await fetch(this.generateURL(this.year, 0));
+            //var jsonData = await response.json();
+
+
+            var standingsYear = await this.getSeasonYear();
+            //console.log(standingsYear)
+            var jsonData = sqlWorker.getDriverStandingsTableByYear(standingsYear);
+            //console.log(jsonData[1]);
+
+            var textToSpeech = "";
             
             var startAtDriver, countTillDriver;
             if(mode == 0){
@@ -207,9 +311,11 @@ class Standings{
             }
             
             for (var i = startAtDriver; i<countTillDriver; i++){
-                var driver_firstName = jsonData.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Driver.givenName;
-                var driver_lastName = jsonData.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Driver.familyName;
+                var driver_firstName = jsonData[i].forename;
+                var driver_lastName = jsonData[i].surname;
                 
+                //console.log(driver_firstName + " " +driver_lastName)
+
                 var i_ranking = i+1;
                 
                 textToSpeech = textToSpeech + "Platz " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
@@ -225,20 +331,24 @@ class Standings{
         try{
             var textToSpeech = "";
             
-            var response = await fetch(this.generateURL(this.year, 0));
-            var jsonData = await response.json();
+            var standingsYear = await this.getSeasonYear();
+            //console.log(standingsYear)
+            var jsonData = sqlWorker.getDriverStandingsTableByYear(standingsYear);
+            //console.log(jsonData[1]);
 
-            var firstDriver = jsonData.MRData.StandingsTable.StandingsLists[0].DriverStandings[0];
-            var secondDriver = jsonData.MRData.StandingsTable.StandingsLists[0].DriverStandings[1];
-            var thirdDriver = jsonData.MRData.StandingsTable.StandingsLists[0].DriverStandings[2];
+            var textToSpeech = "";
+
+            var firstPlaceDriver = jsonData[0];
+            var secondPlaceDriver = jsonData[1];
+            var thirdPlaceDriver = jsonData[2];
             
-            var firstDriver_NAME = firstDriver.Driver.givenName + " " + firstDriver.Driver.familyName;
-            var secondDriver_NAME = secondDriver.Driver.givenName + " " + secondDriver.Driver.familyName;
-            var thirdDriver_NAME = thirdDriver.Driver.givenName + " " + thirdDriver.Driver.familyName;
+            var firstPlaceDriver_NAME = firstPlaceDriver.forename + " " + firstPlaceDriver.surname;
+            var secondPlaceDriver_NAME = secondPlaceDriver.forename + " " + secondPlaceDriver.surname;
+            var thirdPlaceDriver_NAME = thirdPlaceDriver.forename + " " + thirdPlaceDriver.surname;
             
-            textToSpeech = "Erster ist " + firstDriver_NAME + " mit " + firstDriver.points + " Punkten, " +
-            "gefolgt von " + secondDriver_NAME + " mit " + secondDriver.points + " Punkten während " +
-            thirdDriver_NAME + " mit " + thirdDriver.points + " Punkten dritter ist.";
+            textToSpeech = "Erster ist " + firstPlaceDriver_NAME + " mit " + firstPlaceDriver.points + " Punkten, " +
+            "gefolgt von " + secondPlaceDriver_NAME + " mit " + secondPlaceDriver.points + " Punkten während " +
+            thirdPlaceDriver_NAME + " mit " + thirdPlaceDriver.points + " Punkten dritter ist.";
             
             return textToSpeech;
         } catch (e) {
@@ -250,11 +360,13 @@ class Standings{
         try{
             var textToSpeech = "";
             
-            var response = await fetch(this.generateURL(this.year, 0));
-            var jsonData = await response.json();
+            var standingsYear = await this.getSeasonYear();
+            //console.log(standingsYear)
+            var jsonData = sqlWorker.getDriverStandingsPlacementByYear(standingsYear, placement);
+            //console.log(jsonData[0]);
 
-            var driver = jsonData.MRData.StandingsTable.StandingsLists[0].DriverStandings[placement-1].Driver.givenName + " " + jsonData.MRData.StandingsTable.StandingsLists[0].DriverStandings[placement-1].Driver.familyName;
-            textToSpeech = "Platz " + placement + " belegt " + driver + " mit " + jsonData.MRData.StandingsTable.StandingsLists[0].DriverStandings[placement-1].points + " Punkten.";
+            var driver = jsonData[0].forename + " " + jsonData[0].surname;
+            textToSpeech = "Platz " + placement + " belegt " + driver + " mit " + jsonData[0].points + " Punkten.";
 
             return textToSpeech;
         } catch (e) {
@@ -266,17 +378,19 @@ class Standings{
         try{
             var textToSpeech = "";
             
-            var response = await fetch(this.generateURL(this.year, 1));
-            var jsonData = await response.json();
+            var standingsYear = await this.getSeasonYear();
+            //console.log(standingsYear)
+            var jsonData = sqlWorker.getConstructorsTableByYear(standingsYear);
+            //console.log(jsonData);
             
-            var constructorInfo = jsonData.MRData.StandingsTable.StandingsLists[0].ConstructorStandings;
+            //var constructorInfo = jsonData.MRData.StandingsTable.StandingsLists[0].ConstructorStandings;
             
-            for (var i = 0; i<constructorInfo.length; i++){
-                var constructorName = constructorInfo[i].Constructor.name;
+            for (var i = 0; i<jsonData.length; i++){
+                var constructorName = jsonData[i].name;
                 
                 var i_ranking = i+1;
                 
-                textToSpeech = textToSpeech + "Platz " + i_ranking + ": " + constructorName +" mit " + constructorInfo[i].points + " Punkten. ";
+                textToSpeech = textToSpeech + "Platz " + i_ranking + ": " + constructorName +" mit " + jsonData[i].points + " Punkten. ";
             }
             
             return textToSpeech;
@@ -289,16 +403,18 @@ class Standings{
         try{
             var textToSpeech = "";
             
-            var response = await fetch(this.generateURL(this.year, 1));
-            var jsonData = await response.json();
+            var standingsYear = await this.getSeasonYear();
+            //console.log(standingsYear)
+            var jsonData = sqlWorker.getConstructorsLeadersByYear(standingsYear);
+            console.log(jsonData);
 
-            var firstConstructor = jsonData.MRData.StandingsTable.StandingsLists[0].ConstructorStandings[0];
-            var secondConstructor = jsonData.MRData.StandingsTable.StandingsLists[0].ConstructorStandings[1];
-            var thirdConstructor = jsonData.MRData.StandingsTable.StandingsLists[0].ConstructorStandings[2];
+            var firstConstructor = jsonData[0];
+            var secondConstructor = jsonData[1];
+            var thirdConstructor = jsonData[2];
             
-            var firstConstructor_NAME = firstConstructor.Constructor.name;
-            var secondConstructor_NAME = secondConstructor.Constructor.name;
-            var thirdConstructor_NAME = thirdConstructor.Constructor.name;
+            var firstConstructor_NAME = firstConstructor.name;
+            var secondConstructor_NAME = secondConstructor.name;
+            var thirdConstructor_NAME = thirdConstructor.name;
             
             textToSpeech = "Erster ist " + firstConstructor_NAME + " mit " + firstConstructor.points + " Punkten, " +
             "gefolgt von " + secondConstructor_NAME + " mit " + secondConstructor.points + " Punkten während " +
@@ -314,11 +430,13 @@ class Standings{
         try{
             var textToSpeech = "";
             
-            var response = await fetch(this.generateURL(this.year, 1));
-            var jsonData = await response.json();
+            var standingsYear = await this.getSeasonYear();
+            //console.log(standingsYear)
+            var jsonData = sqlWorker.getConstructorsPlacementByYear(standingsYear, placement);
+            console.log(jsonData);
 
-            var constructorInfo = jsonData.MRData.StandingsTable.StandingsLists[0].ConstructorStandings[placement-1].Constructor.name;
-            textToSpeech = "Platz " + placement + " belegt " + constructorInfo + " mit " + jsonData.MRData.StandingsTable.StandingsLists[0].ConstructorStandings[placement-1].points + " Punkten.";
+            var constructorInfo = jsonData[0];
+            textToSpeech = "Platz " + placement + " belegt " + constructorInfo.name + " mit " + constructorInfo.points + " Punkten.";
 
             return textToSpeech;
         } catch (e) {
@@ -326,6 +444,18 @@ class Standings{
         }
     }
 }
+
+
+//var race = new Race("current","last");
+var race = new Race(2021, 10)
+//var standings = new Standings("current");
+const foo = async () => {
+    var response = await race.getPodiumInfoAtTarget();
+    //var response = await standings.getConstructorStandingsPlacement(4);
+    console.log(response);
+}
+
+foo();
 
 module.exports = {
     Race,

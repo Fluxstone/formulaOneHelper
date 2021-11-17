@@ -1,7 +1,14 @@
 const mysql = require('sync-mysql');
+
+const dotenv = require('dotenv')
+const path = require('path')
+
 require('dotenv').config()
 
-class sql_worker {
+dotenv.config({ path: path.join(__dirname, '../.env') })
+
+
+class Sql_Worker {
   constructor() {
     this._connectToDB();
   }
@@ -15,6 +22,28 @@ class sql_worker {
       database: process.env.DB_DATABASE
     });
     this.con = con;
+  }
+
+  getLastRace(){
+    var sqlQuery =
+    `select year, round, name, date
+    from races
+    where date < Curdate()
+    order by date desc
+    limit 1;`;
+  const result = this.con.query(sqlQuery);
+  return result;
+  }
+
+  getNextRace(){
+    var sqlQuery =
+    `select year, round, name, date
+    from races
+    where date > Curdate()
+    order by date asc
+    limit 1;`;
+  const result = this.con.query(sqlQuery);
+  return result;
   }
 
   //SQL-Calls about QUALIFYING
@@ -41,10 +70,30 @@ class sql_worker {
     return result;
   }
 
+  getQualifyingTopThreeByRaceId(raceid) {
+    var sqlQuery =
+      `select qualifying.driverId, qualifying.position, drivers.surname, drivers.forename, qualifying.q1, qualifying.q2, qualifying.q3
+      from qualifying 
+      inner join drivers ON qualifying.driverId = drivers.driverid AND qualifying.raceid=${raceid}
+      order by -position desc limit 3;`;
+    const result = this.con.query(sqlQuery);
+    return result;
+  }
+
+  getQualifyingTableByRaceId(raceid) {
+    var sqlQuery =
+      `select qualifying.driverId, drivers.surname, drivers.forename 
+      from qualifying 
+      inner join drivers ON qualifying.driverId = drivers.driverid AND qualifying.raceid=${raceid}
+      order by -position desc;`;
+    const result = this.con.query(sqlQuery);
+    return result;
+  }
+
   //SQL-Calls about RACEDAY
   getRaceTopThreeByRaceId(raceid) {
     var sqlQuery =
-      `select results.driverId, drivers.surname, drivers.forename 
+      `select results.driverId, results.position, drivers.surname, drivers.forename  
       from results 
       inner join drivers ON results.driverId = drivers.driverid AND results.raceid=${raceid}
       order by -position desc limit 3;`;
@@ -132,12 +181,14 @@ class sql_worker {
   }
 
   getConstructorsLeadersByYear(year) {
+    var raceId = this.getRaceIdByYear(year);
+    raceId = raceId[0].raceId;
     var sqlQuery =
       `select constructors.constructorId, constructors.name, constructorStandings.constructorId, constructorStandings.points,  constructorStandings.position, races.raceId
       from constructorStandings
       inner join constructors on constructors.constructorId = constructorStandings.constructorId
       inner join races on races.raceId = constructorStandings.raceId
-      and races.raceId=${year}
+      and races.raceId=${raceId}
       order by -position desc limit 3;`;
     const result = this.con.query(sqlQuery);
     return result;
@@ -185,6 +236,17 @@ class sql_worker {
   }
 }
 
-var helper = new sql_worker();
-console.log(helper.getDriverStandingsPlacementByYear(2021,3));
 
+
+async function myFunc(){
+  var helper = new Sql_Worker();
+  console.log(await helper.con.connection);
+  console.log(helper.getRaceTopThreeByRaceId(1061));
+}
+
+//myFunc();
+
+//console.log(helper.getRaceIdByYearAndRound(2021,10));
+module.exports = {
+  Sql_Worker
+};
