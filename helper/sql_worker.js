@@ -8,8 +8,6 @@ require('dotenv').config()
 dotenv.config({ path: path.join(__dirname, '../.env') })
 
 
-console.log(process.env.DB_HOST);
-
 class Sql_Worker {
   constructor() {
     this._connectToDB();
@@ -24,6 +22,28 @@ class Sql_Worker {
       database: process.env.DB_DATABASE
     });
     this.con = con;
+  }
+
+  getLastRace(){
+    var sqlQuery =
+    `select year, round, name, date
+    from races
+    where date < Curdate()
+    order by date desc
+    limit 1;`;
+  const result = this.con.query(sqlQuery);
+  return result;
+  }
+
+  getNextRace(){
+    var sqlQuery =
+    `select year, round, name, date
+    from races
+    where date > Curdate()
+    order by date asc
+    limit 1;`;
+  const result = this.con.query(sqlQuery);
+  return result;
   }
 
   //SQL-Calls about QUALIFYING
@@ -216,7 +236,16 @@ class Sql_Worker {
   }
 }
 
-var helper = new Sql_Worker();
+
+
+async function myFunc(){
+  var helper = new Sql_Worker();
+  console.log(await helper.con.connection);
+  console.log(helper.getRaceTopThreeByRaceId(1061));
+}
+
+//myFunc();
+
 //console.log(helper.getRaceIdByYearAndRound(2021,10));
 module.exports = {
   Sql_Worker

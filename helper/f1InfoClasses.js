@@ -10,19 +10,20 @@ class Race{
     }
 
     //Fetch year and round of a given Season. Required for some calls
+    //Will always fetch last round
     async getSeasonInfo(){
         try{
-            
-            var response = await fetch(this.generateURL(this.year, this.raceNumber, 0));
-            var jsonData = await response.json();
+            let jsonData = sqlWorker.getLastRace()
 
-            //console.log(jsonData);
+
+            console.log(jsonData);
 
             var obj = {
-                targetYear: jsonData.MRData.RaceTable.season,
-                targetRound: jsonData.MRData.RaceTable.round,
-
+                targetYear: jsonData[0].year,
+                targetRound: jsonData[0].round,
             };
+
+            console.log(obj);
             return obj;
         } catch (e) {
             console.error(e);
@@ -55,16 +56,25 @@ class Race{
     //Get Podium places
     async getPodiumInfoAtTarget(){
         try{
-            var seasonInfo = this.getSeasonInfo();
-            var raceYear = (await seasonInfo).targetYear;
-            var raceRound = (await seasonInfo).targetRound;
+            if(this.year=="current" && this.round=="last")
+            {
+                var seasonInfo = this.getSeasonInfo();
+                var raceYear = (await seasonInfo).targetYear;
+                var raceRound = (await seasonInfo).targetRound;
+            }
+            else
+            {
+                raceYear = this.year;
+                raceRound= this.raceNumber;
+            }
 
+            
             //console.log(raceYear + " " + raceRound);
 
             var raceId = sqlWorker.getRaceIdByYearAndRound(raceYear, raceRound)[0].raceid;
             //console.log(raceId);
-            var jsonData = sqlWorker.getRaceTopThreeByRaceId(raceId); //1061 2021 10
-            //console.log(jsonData);
+            var jsonData = await sqlWorker.getRaceTopThreeByRaceId(raceId); //1061 2021 10
+            //console.log("Json Data" + jsonData);
             
             var textToSpeech = "";
 
@@ -96,9 +106,17 @@ class Race{
             
             var response = "";
 
-            var seasonInfo = this.getSeasonInfo();
-            var raceYear = (await seasonInfo).targetYear;
-            var raceRound = (await seasonInfo).targetRound;
+            if(this.year=="current" && this.round=="last")
+            {
+                var seasonInfo = this.getSeasonInfo();
+                var raceYear = (await seasonInfo).targetYear;
+                var raceRound = (await seasonInfo).targetRound;
+            }
+            else
+            {
+                raceYear = this.year;
+                raceRound= this.raceNumber;
+            }
             
             var raceId = sqlWorker.getRaceIdByYearAndRound(raceYear, raceRound)[0].raceid;
             //console.log(raceId);
@@ -429,10 +447,11 @@ class Standings{
 
 
 //var race = new Race("current","last");
-var standings = new Standings("current");
+var race = new Race(2021, 10)
+//var standings = new Standings("current");
 const foo = async () => {
-    //var response = await race.getQualifyingRaceTable(0);
-    var response = await standings.getConstructorStandingsPlacement(4);
+    var response = await race.getPodiumInfoAtTarget();
+    //var response = await standings.getConstructorStandingsPlacement(4);
     console.log(response);
 }
 
