@@ -1,6 +1,13 @@
 const fetch = require('node-fetch');
 const SQL = require("./sql_worker");
 
+var momentTZ = require('moment-timezone');
+var got = require('got');
+
+
+
+
+
 const sqlWorker = new SQL.Sql_Worker();
 
 class Race{
@@ -56,7 +63,7 @@ class Race{
     //Get Podium places
     async getPodiumInfoAtTarget(){
         try{
-            if(this.year=="current" && this.round=="last")
+            if(this.year=="current" && this.raceNumber=="last")
             {
                 var seasonInfo = this.getSeasonInfo();
                 var raceYear = (await seasonInfo).targetYear;
@@ -85,10 +92,16 @@ class Race{
             var firstPlaceDriver_NAME = firstPlaceDriver.forename + " " + firstPlaceDriver.surname;
             var secondPlaceDriver_NAME = secondPlaceDriver.forename + " " + secondPlaceDriver.surname;
             var thirdPlaceDriver_NAME = thirdPlaceDriver.forename + " " + thirdPlaceDriver.surname;
+
+            var obj = {
+                first: firstPlaceDriver_NAME,
+                second: secondPlaceDriver_NAME,
+                third: thirdPlaceDriver_NAME
+            }
             
-            textToSpeech = "Erster wurde " + firstPlaceDriver_NAME + ", gefolgt von " + secondPlaceDriver_NAME + " auf dem zweiten Platz während " + thirdPlaceDriver_NAME + " den dritten Platz belegte.";
-            //console.log(textToSpeech);
-            return textToSpeech;
+            //textToSpeech = "Erster wurde " + firstPlaceDriver_NAME + ", gefolgt von " + secondPlaceDriver_NAME + " auf dem zweiten Platz während " + thirdPlaceDriver_NAME + " den dritten Platz belegte.";
+            console.log(obj);
+            return obj;
         } catch (e) {
             console.error(e);
         }
@@ -240,6 +253,29 @@ class Race{
         } catch (e) {
             console.error(e);
         }
+    }
+
+    async getNextRaceDate(deviceId, authToken){
+
+        const gotResponse = await got.get(
+            `https://api.eu.amazonalexa.com//v2/devices/${deviceId}/settings/System.timeZone`,
+            {
+              headers: {
+                "Authorization": `Bearer ${authToken}`
+              }
+            }
+        );
+
+        var response = sqlWorker.getNextRace();
+        var raceTime = response[0].time;
+        var raceDate = response[0].date;
+        var date = new Date(raceDate);
+
+        date.setHours(raceTime.split(":")[0],raceTime.split(":")[1]);
+
+        var setDate = momentTZ.tz(date, gotResponse.body.replace(/(['"])/g,""));
+
+        return await setDate;
     }
 }
 
@@ -444,18 +480,6 @@ class Standings{
         }
     }
 }
-
-
-//var race = new Race("current","last");
-var race = new Race(2021, 10)
-//var standings = new Standings("current");
-const foo = async () => {
-    var response = await race.getPodiumInfoAtTarget();
-    //var response = await standings.getConstructorStandingsPlacement(4);
-    console.log(response);
-}
-
-foo();
 
 module.exports = {
     Race,

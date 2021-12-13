@@ -1,6 +1,50 @@
 const Alexa = require('ask-sdk-core');
 const F1 = require("./helper/f1InfoClasses");
 
+//i18n stuff
+const i18n = require('i18next'); 
+const sprintf = require('i18next-sprintf-postprocessor'); 
+
+const languageStrings = {
+  'de' : require('./i18n/de'),
+  'en' : require('./i18n/en'),
+}
+
+// inside the index.js
+const LocalizationInterceptor = {
+  process(handlerInput) {
+      const localizationClient = i18n.use(sprintf).init({
+          lng: handlerInput.requestEnvelope.request.locale,
+          fallbackLng: 'de', // fallback to DE if locale doesn't exist
+          resources: languageStrings
+      });
+
+      localizationClient.localize = function () {
+          const args = arguments;
+          let values = [];
+
+          for (var i = 1; i < args.length; i++) {
+              values.push(args[i]);
+          }
+          const value = i18n.t(args[0], {
+              returnObjects: true,
+              postProcess: 'sprintf',
+              sprintf: values
+          });
+
+          if (Array.isArray(value)) {
+              return value[Math.floor(Math.random() * value.length)];
+          } else {
+              return value;
+          }
+      }
+
+      const attributes = handlerInput.attributesManager.getRequestAttributes();
+      attributes.t = function (...args) { // pass on arguments to the localizationClient
+          return localizationClient.localize(...args);
+      };
+  },
+};
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
@@ -52,12 +96,27 @@ const GetPodiumInfoLatestIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'GetPodiumInfoLatest';
     },
     async handle(handlerInput) {
+      // we get the translator 't' function from the request attributes
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+
+      
       var speechText = "";
       
       var race = new F1.Race("current", "last");
       var recievedResponse = await race.getPodiumInfoAtTarget();
+
+      first = recievedResponse.first;
+      second = recievedResponse.second;
+      third = recievedResponse.third;
       
-      speechText = recievedResponse;
+      speechText = requestAttributes.t('RACE_WINNER', first, second, third);
+
+      var deviceId = handlerInput.requestEnvelope.context.System.device.deviceId;
+      var accessToken = handlerInput.requestEnvelope.context.System.apiAccessToken;
+
+      var date = await race.getNextRaceDate(deviceId, accessToken);
+
+      speechText = speechText + " " + date.toString();
 
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -654,4 +713,5 @@ exports.handler = Alexa.SkillBuilders.custom()
         FallbackIntentHandler
     )
     .addErrorHandler(ErrorHandler)
+    .addRequestInterceptors(LocalizationInterceptor)
     .lambda();

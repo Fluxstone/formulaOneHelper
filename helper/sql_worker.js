@@ -26,7 +26,7 @@ class Sql_Worker {
 
   getLastRace(){
     var sqlQuery =
-    `select year, round, name, date
+    `select year, round, name, date, time
     from races
     where date < Curdate()
     order by date desc
@@ -37,7 +37,7 @@ class Sql_Worker {
 
   getNextRace(){
     var sqlQuery =
-    `select year, round, name, date
+    `select year, round, name, date, time
     from races
     where date > Curdate()
     order by date asc
@@ -236,17 +236,6 @@ class Sql_Worker {
   }
 }
 
-
-
-async function myFunc(){
-  var helper = new Sql_Worker();
-  console.log(await helper.con.connection);
-  console.log(helper.getRaceTopThreeByRaceId(1061));
-}
-
-//myFunc();
-
-//console.log(helper.getRaceIdByYearAndRound(2021,10));
 module.exports = {
   Sql_Worker
 };
