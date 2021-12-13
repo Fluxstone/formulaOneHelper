@@ -15,7 +15,7 @@ module.exports = {
         'GREETINGS' : 'FILLER',
         'RACE_WINNER' : [
             'Den ersten Platz belegt %s während %s den zweiten Platz belegte. Dritter wurde %s .',
-            'Erster wurde %s , zweiter %s und dritter %s .',
+            'Erster wurde %s , zweiter %s und dritter %s .'
         ],
         'RACE_TABLE_FIRST_HALF' : [
             'Erster Platz %s . Zweiter Platz %s . Dritter Platz %s . Vierter Platz %s . Fünfter Platz %s . Sechster Platz %s . Siebter Platz %s . Achter Platz %s . Neunter Platz %s . Zehnter Platz %s .',
