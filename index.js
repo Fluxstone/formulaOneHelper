@@ -71,6 +71,7 @@ const GetPodiumInfoWithDateIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'GetPodiumInfoWithDate';
     },
     async handle(handlerInput) {
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
       var speechText = "";
       
       const slots = handlerInput.requestEnvelope.request.intent.slots;
@@ -80,8 +81,12 @@ const GetPodiumInfoWithDateIntentHandler = {
 
       var race = new F1.Race(year, round);
       var recievedResponse = await race.getPodiumInfoAtTarget();
+
+      first = recievedResponse.first;
+      second = recievedResponse.second;
+      third = recievedResponse.third;
       
-      speechText = recievedResponse;
+      speechText = requestAttributes.t('RACE_WINNER', first, second, third);
 
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -98,8 +103,7 @@ const GetPodiumInfoLatestIntentHandler = {
     async handle(handlerInput) {
       // we get the translator 't' function from the request attributes
       const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
-
-      
+  
       var speechText = "";
       
       var race = new F1.Race("current", "last");
@@ -110,13 +114,6 @@ const GetPodiumInfoLatestIntentHandler = {
       third = recievedResponse.third;
       
       speechText = requestAttributes.t('RACE_WINNER', first, second, third);
-
-      var deviceId = handlerInput.requestEnvelope.context.System.device.deviceId;
-      var accessToken = handlerInput.requestEnvelope.context.System.apiAccessToken;
-
-      var date = await race.getNextRaceDate(deviceId, accessToken);
-
-      speechText = speechText + " " + date.toString();
 
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -177,12 +174,15 @@ const GetRaceTableLatestIntentHandler = {
     }
 };
 
+//Bug Siebter geht nicht. 7 geht / undefined
 const GetPlacementWithDateIntentHandler = {
     canHandle(handlerInput) {
       return handlerInput.requestEnvelope.request.type === 'IntentRequest'
         && handlerInput.requestEnvelope.request.intent.name === 'GetPlacementWithDate';
     },
     async handle(handlerInput) {
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+
       var speechText = "";
 
       const slots = handlerInput.requestEnvelope.request.intent.slots;
@@ -193,8 +193,8 @@ const GetPlacementWithDateIntentHandler = {
 
       var race = new F1.Race(year, round);
       var recievedResponse = await race.getPlacementAtTarget(placement);
-      
-      speechText = recievedResponse;
+
+      speechText = requestAttributes.t('RACE_PLACEMENT', placement, recievedResponse);
       
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -203,12 +203,15 @@ const GetPlacementWithDateIntentHandler = {
     }
 };
 
+//Bug Siebter geht nicht. 7 geht / undefined
 const GetPlacementLatestIntentHandler = {
     canHandle(handlerInput) {
       return handlerInput.requestEnvelope.request.type === 'IntentRequest'
         && handlerInput.requestEnvelope.request.intent.name === 'GetPlacementLatest';
     },
     async handle(handlerInput) {
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+
       var speechText = "";
 
       const slots = handlerInput.requestEnvelope.request.intent.slots;
@@ -218,7 +221,7 @@ const GetPlacementLatestIntentHandler = {
       var race = new F1.Race("current", "last");
       var recievedResponse = await race.getPlacementAtTarget(placement);
       
-      speechText = recievedResponse;
+      speechText = requestAttributes.t('RACE_PLACEMENT', placement, recievedResponse);
       
       
       return handlerInput.responseBuilder
@@ -239,6 +242,7 @@ const GetQualifyingPodiumWithDateIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'GetQualifyingPodiumWithDate';
     },
     async handle(handlerInput) {
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
       var speechText = "";
 
       const slots = handlerInput.requestEnvelope.request.intent.slots;
@@ -249,8 +253,7 @@ const GetQualifyingPodiumWithDateIntentHandler = {
       var race = new F1.Race(year, round);
       var recievedResponse = await race.getQualifyingPodiumInfo();
       
-      speechText = recievedResponse;
-      
+      speechText = requestAttributes.t('QUALI_WINNER', recievedResponse.first, recievedResponse.firstTime, recievedResponse.second, recievedResponse.secondTime, recievedResponse.third, recievedResponse.thirdTime);
       
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -265,12 +268,14 @@ const GetQualifyingPodiumLatestIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'GetQualifyingPodiumLatest';
     },
     async handle(handlerInput) {
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+
       var speechText = "";
 
       var race = new F1.Race("current", "last");
       var recievedResponse = await race.getQualifyingPodiumInfo();
       
-      speechText = recievedResponse;
+      speechText = requestAttributes.t('QUALI_WINNER', recievedResponse.first, recievedResponse.firstTime, recievedResponse.second, recievedResponse.secondTime, recievedResponse.third, recievedResponse.thirdTime);
       
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -365,12 +370,14 @@ const GetDriverStandingsLeadersLatestIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'GetDriverStandingsLeadersLatest';
     },
     async handle(handlerInput) {
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+
       var speechText = "";
       
       var standings = new F1.Standings("current");
       var recievedResponse = await standings.getDriverStandingsLeaders();
       
-      speechText = recievedResponse;
+      speechText = requestAttributes.t('DRIVER_LEADER', recievedResponse.firstPlaceDriver , recievedResponse.firstPlaceDriverPoints , recievedResponse.secondPlaceDriver , recievedResponse.secondPlaceDriverPoints , recievedResponse.thirdPlaceDriver , recievedResponse.thirdPlaceDriverPoints);
       
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -412,6 +419,7 @@ const GetDriverStandingsPlacementLatestIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'GetDriverStandingsPlacementLatest';
     },
     async handle(handlerInput) {
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
       var speechText = "";
       
       const slots = handlerInput.requestEnvelope.request.intent.slots;
@@ -420,8 +428,8 @@ const GetDriverStandingsPlacementLatestIntentHandler = {
       
       var standings = new F1.Standings("current");
       var recievedResponse = await standings.getDriverStandingsPlacement(placement);
-      
-      speechText = recievedResponse;
+
+      speechText = requestAttributes.t('DRIVER_PLACEMENT', placement, recievedResponse.driver, recievedResponse.points);
       
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -457,6 +465,7 @@ const GetConstructorStandingsLeadersLatestIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'GetConstructorStandingsLeadersLatest';
     },
     async handle(handlerInput) {
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
       var speechText = "";
       
       var standings = new F1.Standings("current");

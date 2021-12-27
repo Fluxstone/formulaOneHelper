@@ -75,15 +75,9 @@ class Race{
                 raceRound= this.raceNumber;
             }
 
-            
-            //console.log(raceYear + " " + raceRound);
-
             var raceId = sqlWorker.getRaceIdByYearAndRound(raceYear, raceRound)[0].raceid;
-            //console.log(raceId);
+
             var jsonData = await sqlWorker.getRaceTopThreeByRaceId(raceId); //1061 2021 10
-            //console.log("Json Data" + jsonData);
-            
-            var textToSpeech = "";
 
             var firstPlaceDriver = jsonData[0];
             var secondPlaceDriver = jsonData[1];
@@ -99,7 +93,6 @@ class Race{
                 third: thirdPlaceDriver_NAME
             }
             
-            //textToSpeech = "Erster wurde " + firstPlaceDriver_NAME + ", gefolgt von " + secondPlaceDriver_NAME + " auf dem zweiten Platz während " + thirdPlaceDriver_NAME + " den dritten Platz belegte.";
             console.log(obj);
             return obj;
         } catch (e) {
@@ -174,9 +167,9 @@ class Race{
             //console.log(placement);
             
             var driver = driver.forename + " " + driver.surname;
-            var response = "Platz " + placement + " belegt " + driver;
+            //var response = "Platz " + placement + " belegt " + driver;
             
-            return response;
+            return driver;
         } catch (e) {
             console.error(e);
         }
@@ -193,10 +186,7 @@ class Race{
             var raceId = sqlWorker.getRaceIdByYearAndRound(raceYear, raceRound)[0].raceid;
             //console.log(raceId);
             var jsonData = sqlWorker.getQualifyingTopThreeByRaceId(raceId); //1061 2021 10
-            console.log(jsonData);
-            
-            var textToSpeech = "";
-
+        
             var firstPlaceDriver = jsonData[0];
             var secondPlaceDriver = jsonData[1];
             var thirdPlaceDriver = jsonData[2];
@@ -204,12 +194,17 @@ class Race{
             var firstPlaceDriver_NAME = firstPlaceDriver.forename + " " + firstPlaceDriver.surname;
             var secondPlaceDriver_NAME = secondPlaceDriver.forename + " " + secondPlaceDriver.surname;
             var thirdPlaceDriver_NAME = thirdPlaceDriver.forename + " " + thirdPlaceDriver.surname;
+
+            var obj = {
+                first: firstPlaceDriver_NAME,
+                firstTime: firstPlaceDriver.q3,
+                second: secondPlaceDriver_NAME,
+                secondTime: secondPlaceDriver.q3,
+                third: thirdPlaceDriver_NAME,
+                thirdTime: thirdPlaceDriver.q3,
+            }
             
-            textToSpeech = "Erster wurde im Qualifying " + firstPlaceDriver_NAME + " mit einer Zeit von " + firstPlaceDriver.q3 + 
-            ", gefolgt von " + secondPlaceDriver_NAME + " mit einer Zeit von " + secondPlaceDriver.q3 + " auf dem zweiten Platz während " 
-            + thirdPlaceDriver_NAME + " den dritten Platz mit einer Zeit von " + thirdPlaceDriver.q3 + " belegte.";
-            
-            return textToSpeech;
+            return obj;
         } catch (e){
             console.error(e);
         }
@@ -372,8 +367,6 @@ class Standings{
             var jsonData = sqlWorker.getDriverStandingsTableByYear(standingsYear);
             //console.log(jsonData[1]);
 
-            var textToSpeech = "";
-
             var firstPlaceDriver = jsonData[0];
             var secondPlaceDriver = jsonData[1];
             var thirdPlaceDriver = jsonData[2];
@@ -381,12 +374,17 @@ class Standings{
             var firstPlaceDriver_NAME = firstPlaceDriver.forename + " " + firstPlaceDriver.surname;
             var secondPlaceDriver_NAME = secondPlaceDriver.forename + " " + secondPlaceDriver.surname;
             var thirdPlaceDriver_NAME = thirdPlaceDriver.forename + " " + thirdPlaceDriver.surname;
-            
-            textToSpeech = "Erster ist " + firstPlaceDriver_NAME + " mit " + firstPlaceDriver.points + " Punkten, " +
-            "gefolgt von " + secondPlaceDriver_NAME + " mit " + secondPlaceDriver.points + " Punkten während " +
-            thirdPlaceDriver_NAME + " mit " + thirdPlaceDriver.points + " Punkten dritter ist.";
-            
-            return textToSpeech;
+        
+            let obj = {
+                firstPlaceDriver: firstPlaceDriver_NAME,
+                firstPlaceDriverPoints: firstPlaceDriver.points,
+                secondPlaceDriver: secondPlaceDriver_NAME,
+                secondPlaceDriverPoints: secondPlaceDriver.points,
+                thirdPlaceDriver: thirdPlaceDriver_NAME,
+                thirdPlaceDriverPoints: thirdPlaceDriver.points,
+            }
+
+            return obj;
         } catch (e) {
             console.error(e);
         }
@@ -402,9 +400,13 @@ class Standings{
             //console.log(jsonData[0]);
 
             var driver = jsonData[0].forename + " " + jsonData[0].surname;
-            textToSpeech = "Platz " + placement + " belegt " + driver + " mit " + jsonData[0].points + " Punkten.";
 
-            return textToSpeech;
+            let obj = {
+                driver: driver,
+                points: jsonData[0].points
+            }
+
+            return obj;
         } catch (e) {
             console.error(e);
         }
@@ -452,11 +454,16 @@ class Standings{
             var secondConstructor_NAME = secondConstructor.name;
             var thirdConstructor_NAME = thirdConstructor.name;
             
-            textToSpeech = "Erster ist " + firstConstructor_NAME + " mit " + firstConstructor.points + " Punkten, " +
-            "gefolgt von " + secondConstructor_NAME + " mit " + secondConstructor.points + " Punkten während " +
-            thirdConstructor_NAME + " mit " + thirdConstructor.points + " Punkten dritter ist.";
-            
-            return textToSpeech;
+            let obj = {
+                firstConstructor: firstConstructor_NAME,
+                firstConstructorPoints:firstConstructor.points,
+                secondConstructor: secondConstructor_NAME,
+                secondConstructorPoints: secondConstructor.points,
+                thirdConstructor: thirdConstructor_NAME,
+                thirdConstructorPoints: thirdConstructor.points
+            }
+
+            return obj;
         } catch (e) {
             console.error(e);
         }
@@ -485,3 +492,4 @@ module.exports = {
     Race,
     Standings
 };
+
