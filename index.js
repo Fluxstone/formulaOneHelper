@@ -5,6 +5,8 @@ const F1 = require("./helper/f1InfoClasses");
 const i18n = require('i18next'); 
 const sprintf = require('i18next-sprintf-postprocessor'); 
 
+var momentTZ = require('moment-timezone');
+
 const languageStrings = {
   'de' : require('./i18n/de'),
   'en' : require('./i18n/en'),
@@ -51,8 +53,9 @@ const LaunchRequestHandler = {
       return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
     },
     handle(handlerInput) {
-      const speechText = 'Willkommen zum Formel 1 Helfer! Du kannst mich über Ergebnisse, Rennzeiten und Tabellenplätze befragen!';
-  
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+      speechText = requestAttributes.t('GREETING');
+
       return handlerInput.responseBuilder
         .speak(speechText)
         .reprompt(speechText)
@@ -101,7 +104,6 @@ const GetPodiumInfoLatestIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'GetPodiumInfoLatest';
     },
     async handle(handlerInput) {
-      // we get the translator 't' function from the request attributes
       const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
   
       var speechText = "";
@@ -528,6 +530,33 @@ const GetConstructorStandingsPlacementLatestIntentHandler = {
     }
 };
 
+//---Misc Intents---
+const GetNextRaceDateIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'GetNextRaceDate';
+  },
+  async handle(handlerInput) {
+    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+    var speechText = "";
+
+    const deviceId = handlerInput.requestEnvelope.context.System.device.deviceId;
+    const authToken = handlerInput.requestEnvelope.context.System.apiAccessToken;
+
+    var race = new F1.Race("current", "last");
+    var recievedResponse = await race.getNextRaceDate(deviceId, authToken);
+
+    var offsetDate = momentTZ(recievedResponse.date).format("DD-MM-YYYY HH:mm");
+
+    speechText = requestAttributes.t('NEXT_RACE_DATE', recievedResponse.name, offsetDate);
+    
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .reprompt(speechText)
+      .getResponse();
+  }
+};
+
 /*
 *
 * Yes and No Intents + Functions regarding context
@@ -714,6 +743,7 @@ exports.handler = Alexa.SkillBuilders.custom()
         GetConstructorStandingsLeadersLatestIntentHandler,
         GetConstructorStandingsTableWithDateIntentHandler,
         GetConstructorStandingsPlacementLatestIntentHandler,
+        GetNextRaceDateIntentHandler,
         YesIntentHandler,
         NoIntentHandler,
         CancelIntentHandler,

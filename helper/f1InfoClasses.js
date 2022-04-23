@@ -4,10 +4,6 @@ const SQL = require("./sql_worker");
 var momentTZ = require('moment-timezone');
 var got = require('got');
 
-
-
-
-
 const sqlWorker = new SQL.Sql_Worker();
 
 class Race{
@@ -261,16 +257,24 @@ class Race{
             }
         );
 
-        var response = sqlWorker.getNextRace();
+        var response = sqlWorker.getNextRaceDate();
+
         var raceTime = response[0].time;
         var raceDate = response[0].date;
+        var raceName = response[0].name;
+
         var date = new Date(raceDate);
 
         date.setHours(raceTime.split(":")[0],raceTime.split(":")[1]);
 
         var setDate = momentTZ.tz(date, gotResponse.body.replace(/(['"])/g,""));
 
-        return await setDate;
+        var obj = {
+            date: setDate,
+            name: raceName
+        }
+
+        return await obj;
     }
 }
 
@@ -492,4 +496,21 @@ module.exports = {
     Race,
     Standings
 };
+
+async function test(){
+    var race = new Race(2022, 3);
+    var result = race.getNextRaceDate("amzn1.ask.device.AG4OJUHZX3BQ44GXZNXV2TKX53KMCMLXQMGQGVFDLCFXQMRLMO4P27ZJCAQEGSUOM4QJT644CI4ZYVIOJWLFOFCPDD6SABHBGZKSRD4R7IDZPIZ2377SDXMAOONBV6TTLNOHBRKJYQTRLZ42LZ5ABULKZIW5PIDIR3ID4WWSIRM6R35Y6VVCI", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjEifQ.eyJhdWQiOiJodHRwczovL2FwaS5ldS5hbWF6b25hbGV4YS5jb20iLCJpc3MiOiJBbGV4YVNraWxsS2l0Iiwic3ViIjoiYW16bjEuYXNrLnNraWxsLjcwMmYzY2JlLTcxNjgtNGU4YS1iY2FiLTIxYWQwNDYyM2JlOSIsImV4cCI6MTY1MDc0NTkyNywiaWF0IjoxNjUwNzQ1NjI3LCJuYmYiOjE2NTA3NDU2MjcsInByaXZhdGVDbGFpbXMiOnsiY29udGV4dCI6IkFBQUFBQUFBQVFCOS9BZGgrNXh6V2xnSVJLczhQZHVDS3dFQUFBQUFBQUFubkpMQm9LUVBUSk54dUorYnYrVlk2L2tyZGZhWmJGQ3ZrUzNlVmc5N29zS1BZNG1jclowNm1rY092RXFBN1M0ODVNVnp0WWNGNG8zeUN3UGFSV1RyOEJ4T2JTbG84TzRjbzV4R0FNUjcvTkkwMk8yRlkvUFFrenU4OFZxMkVPekVYZEQ4bWFDb3hZeFZuWUZpQ0lPa3hoUjFkeFJRa1d3MWRqMURyNXp3VGRkK1dxQnNoNjlncEVONlJoWVFrdXBKaXZLTEptUUk2aVZTMU4rSiswR0p1bjdGUnBoN1B3eE5NQWxBL0tGMFJuQjVDQldycmZ5WXNCK2NkcXE0c3ZJS3d1TFEwaDNKODVKSEVPOEFlOTJxUHRJdndGWjdsYmhic2JuQSsrb1ovajk0bE1RL1B1ZlNzNTNKUmNzL3dYTEloQ2toaUg2aWJuUVg0bzBkL0RUVk5sa3ZxT2M4RGpkNU94SnY1YXpyMlhPNVMrTDBSbUllM2pIRkxKUXJBT0RsV0w5MnBrSS9iVWREUVE9PSIsImNvbnNlbnRUb2tlbiI6bnVsbCwiZGV2aWNlSWQiOiJhbXpuMS5hc2suZGV2aWNlLkFHNE9KVUhaWDNCUTQ0R1haTlhWMlRLWDUzS01DTUxYUU1HUUdWRkRMQ0ZYUU1STE1PNFAyN1pKQ0FRRUdTVU9NNFFKVDY0NENJNFpZVklPSldMRk9GQ1BERDZTQUJIQkdaS1NSRDRSN0lEWlBJWjIzNzdTRFhNQU9PTkJWNlRUTE5PSEJSS0pZUVRSTFo0MkxaNUFCVUxLWklXNVBJRElSM0lENFdXU0lSTTZSMzVZNlZWQ0kiLCJ1c2VySWQiOiJhbXpuMS5hc2suYWNjb3VudC5BR0NBRUpNS09UMktMSjNGVU03T0tQTUg3WExQSlBXS1dDTlNOV0tBQUxUR0VVQVJTTlZSM0pUV0Y1WEJVNENRTkNKV1hWUkJMQlNMUUhMQTJXWkk0SzVRR0tQWE1QWU1SS1dYS0JQWktWWFU3QUFEWFpVSUpHUUkyNDc2TTNUWjJEQVRINkVZUEVBRzdLR0s0SVlGR0tBSUNOUlhMNVM0SzVIUlhDNU5SQktXREU1RUdRT1ZCSjNYVDdCRUdUSk1CWUhCSURIQ1JDTk1CN0EifX0.RPwtE6iPxxWgLMBQ9HeAfqwo3KSgSQNo6A74JDz_aYQL74FVNvLrBrHWWZcoxcK4Zp1DxHb8e77ApeSOjb8DtQI9bFnLpbEwjO_e54b_yVQP8LfqSRIN0lNeIfOlCS6v6auiDcRt8IqDcP-k0CLZt6udUknLLGtDYiEYPKu-qcnOlK5Zy0mF_hHVrIVZ5dPlua9gOv_DeLfNl0-sAYy7R0qh7ggDVQ7AHC2uKcIqCjO24Z_ahRKFcnw3TsC_uMYDis8zpn6-GHODNZxR8zub2Fv7DYWtYZ0kd1-Xdk6QTNRrXPNMVajon6BnbWIPZUysfgtuTbjJXbuj6UhrbadDxw");
+    var r = await result;
+    var time = r.format('HH:mm');
+    var offset = r.format('Z');
+    var date = r.format('DD-MM-YYYY');
+
+    var propperDate = time + offset;
+
+    console.log(propperDate);
+    console.log(offset);
+    console.log(momentTZ(r).add(offset).format("HH:mm DD-MM-YYYY"));
+}
+
+//test();
 

@@ -35,17 +35,6 @@ class Sql_Worker {
   return result;
   }
 
-  getNextRace(){
-    var sqlQuery =
-    `select year, round, name, date, time
-    from races
-    where date > Curdate()
-    order by date asc
-    limit 1;`;
-  const result = this.con.query(sqlQuery);
-  return result;
-  }
-
   //SQL-Calls about QUALIFYING
   getQualifyingTopThreeByDate(year, round) {
     var sqlQuery =
@@ -231,6 +220,17 @@ class Sql_Worker {
 
   getDriverNameFromId(driverId) {
     var sqlQuery = `SELECT * FROM drivers WHERE driverid=${driverId}`;
+    const result = this.con.query(sqlQuery);
+    return result;
+  }
+
+  getNextRaceDate(){
+    var sqlQuery = `select year, round, name, date, time
+    from races
+    where date < Curdate()+6
+    order by date desc
+    limit 1;`;
+
     const result = this.con.query(sqlQuery);
     return result;
   }

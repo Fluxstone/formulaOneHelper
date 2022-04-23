@@ -1,18 +1,8 @@
 module.exports = {
     translation : {
-        'SKILL_NAME' : 'Super Welcome', // <- can either be a string...
         'GREETING' : [                  // <- or an array of strings.
-            'Hello there',
-            'Hey',
-            'Hi!'
+            'Willkommen zum Formel 1 Helfer! Du kannst mich über Ergebnisse, Rennzeiten und Tabellenplätze befragen!'
         ],
-        'GREETING_WITH_NAME' : [
-            'Hey %s',         // --> That %s is a wildcard. It will
-            'Hi there, %s',   //     get turned into a name in our code.
-            'Hello, %s'       //     e.g. requestAttributes.t('GREETING_WITH_NAME', 'Andrea')
-        ],
-        // ...more...
-        'GREETINGS' : 'FILLER',
         'RACE_WINNER' : [
             'Den ersten Platz belegt %s während %s den zweiten Platz belegte. Dritter wurde %s .',
             'Erster wurde %s , zweiter %s und dritter %s .'
@@ -26,6 +16,9 @@ module.exports = {
         'RACE_TABLE_QUESTION' : [ //Möchtest du die ganze Tabelle hören?
             'Möchtest du die ganze Tabelle hören? In diesem Fall sage einfach: Ja',
         ], 
+        'NEXT_RACE_DATE' : [
+            'Der %s findet am %s statt.'
+        ],
         //Make Race_placement2 where "Drivername belegt placement"
         'RACE_PLACEMENT' : [
             'Platz %s belegte %s',
@@ -84,6 +77,9 @@ module.exports = {
         ],
         'CONSTRUCTOR_PLACEMENT' : [
             'SENTENCE',
+        ],
+        'CLOSING_SKILL_NORMAL' : [
+            'Skill wird geschlossen! Bis zum nächsten mal!'
         ],
     }
 }
