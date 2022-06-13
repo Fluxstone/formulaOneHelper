@@ -131,19 +131,26 @@ const GetRaceTableWithDateIntentHandler = {
     },
     async handle(handlerInput) {
       var speechText = "";
-      
+      var targetLocale = handlerInput.requestEnvelope.request.locale;
       const slots = handlerInput.requestEnvelope.request.intent.slots;
       
       var year = slots.year.value;
       var round = slots.round.value;
 
       var race = new F1.Race(year, round);
-      var recievedResponse = await race.getRaceTableAtTarget(0);
+      var recievedResponse = await race.getRaceTableAtTarget(0, targetLocale);
             
       setIntentContext(handlerInput, "GetRaceTable_ALL_RESULTS");
       setRaceContext(handlerInput, year, round);
       
-      speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      //Translation implementend here given that its unclear how many competitors are on the grid. Fallback locale is German
+      if(targetLocale == "de-DE"){
+        speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      } else if (locale == "en-US"){
+        speechText = recievedResponse + " If you would like to hear the remaining table places say: Yes";
+      } else {
+        speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      }
       
 
       return handlerInput.responseBuilder
@@ -160,14 +167,24 @@ const GetRaceTableLatestIntentHandler = {
     },
     async handle(handlerInput) {
       var speechText = "";
+      var targetLocale = handlerInput.requestEnvelope.request.locale;
+
       setIntentContext(handlerInput, "GetRaceTable_ALL_RESULTS");
       setRaceContext(handlerInput, "current", "last");
       
       
       var race = new F1.Race("current", "last");
-      var recievedResponse = await race.getRaceTableAtTarget(0);
+      var recievedResponse = await race.getRaceTableAtTarget(0, targetLocale);
       
-      speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+
+      //Translation implementend here given that its unclear how many competitors are on the grid. Fallback locale is German
+      if(targetLocale == "de-DE"){
+        speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      } else if (locale == "en-US"){
+        speechText = recievedResponse + " If you would like to hear the remaining table places say: Yes";
+      } else {
+        speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      }
       
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -293,14 +310,24 @@ const GetQualifyingRaceTableLatestIntentHandler = {
     },
     async handle(handlerInput) {
       var speechText = "";
+      var targetLocale = handlerInput.requestEnvelope.request.locale;
 
       var race = new F1.Race("current", "last");
-      var recievedResponse = await race.getQualifyingRaceTable(0);
-      
+      var recievedResponse = await race.getQualifyingRaceTable(0, targetLocale);
+
       setIntentContext(handlerInput, "GetQualifyingRaceTable_ALL_RESULTS");
       setRaceContext(handlerInput, "current", "last");
-      
-      speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+
+      //Translation implementend here given that its unclear how many competitors are on the grid. Fallback locale is German
+      if(targetLocale == "de-DE"){
+        console.log("In germany");
+        speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      } else if (locale == "en-US"){
+        console.log("In murrica");
+        speechText = recievedResponse + " If you would like to hear the remaining table places say: Yes";
+      } else {
+        speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      }
       
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -316,7 +343,7 @@ const GetQualifyingRaceTableWithDateIntentHandler = {
     },
     async handle(handlerInput) {
       var speechText = "";
-      
+      var targetLocale = handlerInput.requestEnvelope.request.locale;
       const slots = handlerInput.requestEnvelope.request.intent.slots;
       
       var year = slots.year.value;
@@ -326,10 +353,17 @@ const GetQualifyingRaceTableWithDateIntentHandler = {
       setRaceContext(handlerInput, year, round);
 
       var race = new F1.Race(year, round);
-      var recievedResponse = await race.getQualifyingRaceTable(0);
+      var recievedResponse = await race.getQualifyingRaceTable(0, targetLocale);
       
       
-      speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      //Translation implementend here given that its unclear how many competitors are on the grid. Fallback locale is German
+      if(targetLocale == "de-DE"){
+        speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      } else if (locale == "en-US"){
+        speechText = recievedResponse + " If you would like to hear the remaining table places say: Yes";
+      } else {
+        speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      }
 
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -350,14 +384,23 @@ const GetDriverStandingsTableLatestIntentHandler = {
     },
     async handle(handlerInput) {
       var speechText = "";
-      
+      var targetLocale = handlerInput.requestEnvelope.request.locale;
       setIntentContext(handlerInput, "GetDriverStandingsTable_ALL_RESULTS");
       setStandingsContext(handlerInput, "current");
       
       var standings = new F1.Standings("current");
-      var recievedResponse = await standings.getDriverStandingsTable(0);
+      var recievedResponse = await standings.getDriverStandingsTable(0, targetLocale);
+
+      console.log(recievedResponse);
       
-      speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      //Translation implementend here given that its unclear how many competitors are on the grid. Fallback locale is German
+      if(targetLocale == "de-DE"){
+        speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      } else if (locale == "en-US"){
+        speechText = recievedResponse + " If you would like to hear the remaining table places say: Yes";
+      } else {
+        speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      }
       
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -395,18 +438,24 @@ const GetDriverStandingsTableWithDateIntentHandler = {
     },
     async handle(handlerInput) {
       var speechText = "";
-      
+      var targetLocale = handlerInput.requestEnvelope.request.locale;
       const slots = handlerInput.requestEnvelope.request.intent.slots;
-
       var year = slots.year.value;
       
       setIntentContext(handlerInput, "GetDriverStandingsTable_ALL_RESULTS");
       setStandingsContext(handlerInput, year);
       
       var standings = new F1.Standings(year);
-      var recievedResponse = await standings.getDriverStandingsTable(0);
+      var recievedResponse = await standings.getDriverStandingsTable(0, targetLocale);
       
-      speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      //Translation implementend here given that its unclear how many competitors are on the grid. Fallback locale is German
+      if(targetLocale == "de-DE"){
+        speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      } else if (locale == "en-US"){
+        speechText = recievedResponse + " If you would like to hear the remaining table places say: Yes";
+      } else {
+        speechText = recievedResponse + " Wenn du die restliche Tabellenplatzierungen hören möchtest sage einfach: Ja.";
+      }
       
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -448,9 +497,9 @@ const GetConstructorStandingsTableLatestIntentHandler = {
     },
     async handle(handlerInput) {
       var speechText = "";
-      
+
       var standings = new F1.Standings("current");
-      var recievedResponse = await standings.getConstructorStandingsTable();
+      var recievedResponse = await standings.getConstructorStandingsTable(handlerInput.requestEnvelope.request.locale);
       
       speechText = recievedResponse;
       
@@ -472,9 +521,8 @@ const GetConstructorStandingsLeadersLatestIntentHandler = {
       
       var standings = new F1.Standings("current");
       var recievedResponse = await standings.getConstructorStandingsLeaders();
-      
-      speechText = recievedResponse;
-      
+      speechText = requestAttributes.t('CONSTRUCTOR_LEADER', recievedResponse.firstConstructor, recievedResponse.firstConstructorPoints, recievedResponse.secondConstructor, recievedResponse.secondConstructorPoints, recievedResponse.thirdConstructor, recievedResponse.thirdConstructorPoints);
+
       return handlerInput.responseBuilder
         .speak(speechText)
         .reprompt(speechText)
@@ -495,7 +543,7 @@ const GetConstructorStandingsTableWithDateIntentHandler = {
       var year = slots.year.value;
       
       var standings = new F1.Standings(year);
-      var recievedResponse = await standings.getConstructorStandingsTable();
+      var recievedResponse = await standings.getConstructorStandingsTable(handlerInput.requestEnvelope.request.locale);
       
       speechText = recievedResponse;
       
@@ -512,6 +560,7 @@ const GetConstructorStandingsPlacementLatestIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'GetConstructorStandingsPlacementLatest';
     },
     async handle(handlerInput) {
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
       var speechText = "";
       
       const slots = handlerInput.requestEnvelope.request.intent.slots;
@@ -520,9 +569,8 @@ const GetConstructorStandingsPlacementLatestIntentHandler = {
       
       var standings = new F1.Standings("current");
       var recievedResponse = await standings.getConstructorStandingsPlacement(placement);
-      
-      speechText = recievedResponse;
-      
+      speechText = requestAttributes.t('CONSTRUCTOR_PLACEMENT', recievedResponse.position, recievedResponse.name, recievedResponse.points);
+
       return handlerInput.responseBuilder
         .speak(speechText)
         .reprompt(speechText)
@@ -587,6 +635,7 @@ const YesIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.YesIntent'
     },
     async handle(handlerInput) {
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
       var speechText = "";
       
       const attributes = handlerInput.attributesManager.getSessionAttributes();
@@ -594,31 +643,33 @@ const YesIntentHandler = {
       
       switch(attributes.targetContext){
         case "GetRaceTable_ALL_RESULTS":
+          var targetLocale = handlerInput.requestEnvelope.request.locale;
           var race = new F1.Race(attributes.targetYear, attributes.targetRound);
-          var recievedResponse = await race.getRaceTableAtTarget(1);
+          var recievedResponse = await race.getRaceTableAtTarget(1, targetLocale);
           speechText = recievedResponse;
           
           setIntentContext(handlerInput, null);
           setRaceContext(handlerInput, null, null);
           break;
         case "GetQualifyingRaceTable_ALL_RESULTS":
+          var targetLocale = handlerInput.requestEnvelope.request.locale;
           var race = new F1.Race(attributes.targetYear, attributes.targetRound);
-          var recievedResponse = await race.getQualifyingRaceTable(1);
+          var recievedResponse = await race.getQualifyingRaceTable(1, targetLocale);
           speechText = recievedResponse;
           
           setIntentContext(handlerInput, null);
           setRaceContext(handlerInput, null, null);
           break;
         case "GetDriverStandingsTable_ALL_RESULTS":
+          var targetLocale = handlerInput.requestEnvelope.request.locale;
           var standings = new F1.Standings(attributes.targetYear);
-          var recievedResponse = await standings.getDriverStandingsTable(1);
+          var recievedResponse = await standings.getDriverStandingsTable(1, targetLocale);
           speechText = recievedResponse;
-          
           setIntentContext(handlerInput, null);
           setRaceContext(handlerInput, null, null);
           break;
         default:
-          speechText = "Tut mir leid. Ich habe deine Frage nicht ganz verstanden. Bitte starte den Dialog erneut.";
+          speechText = requestAttributes.t('CONTEXT_ERROR_HANDLER');
           break;
       }
       
@@ -654,14 +705,17 @@ const ErrorHandler = {
     },
     handle(handlerInput, error) {
       console.log(`Error handled: ${error.message}`);
+
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+      var speechText = "";
+      speechText = requestAttributes.t('ERROR_INTENT_HANDLER');
   
       return handlerInput.responseBuilder
-        .speak('Sorry, I can\'t understand the command. Please say again.')
-        .reprompt('Sorry, I can\'t understand the command. Please say again.')
+        .speak(speechText)
+        .reprompt(speechText)
         .getResponse();
     },
 };
-
 
 const CancelIntentHandler = {
     canHandle(handlerInput) {
@@ -669,7 +723,9 @@ const CancelIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.CancelIntent';
     },
     handle(handlerInput) {
-      var speechText = "CancelIntentHandler";
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+      var speechText = "";
+      speechText = requestAttributes.t('CANCEL_INTENT_HANDLER');
       
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -684,8 +740,10 @@ const HelpIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent';
     },
     handle(handlerInput) {
-      var speechText = "Du kannst mich zu verschiedenen Kategorien wie Renn- und Qualifyingergebnissen sowie Fahrer- und Konstrukteurstabellen befragen. Versuche es mal mit: Wer hat das letzte Rennen gewonnen? Wer wurde zehnter in Runde 4 in 2014? Wer führt die Konstrukteurs Tabelle in dieser Saison an? Bei weiteren Fragen schau auf der Website www.f1Helper.com nach.";
-      
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+      var speechText = "";
+      speechText = requestAttributes.t('HELP_INTENT_HANDLER');
+
       return handlerInput.responseBuilder
         .speak(speechText)
         .reprompt(speechText)
@@ -699,7 +757,9 @@ const StopIntentHandler = {
         && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.StopIntent';
     },
     handle(handlerInput) {
-      var speechText = "Skill wird geschlossen. Bis zum nächsten mal!";
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+      var speechText = "";
+      speechText = requestAttributes.t('CLOSING_SKILL_NORMAL');
       
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -714,6 +774,10 @@ const FallbackIntentHandler = {
     },
     handle(handlerInput) {
       var speechText = "Irgendetwas ist schief gelaufen! Bitte versuche es nochmal!";
+
+      const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+      var speechText = "";
+      speechText = requestAttributes.t('FALLBACK_INTENT_HANDLER');
       
       return handlerInput.responseBuilder
         .speak(speechText)
@@ -754,3 +818,15 @@ exports.handler = Alexa.SkillBuilders.custom()
     .addErrorHandler(ErrorHandler)
     .addRequestInterceptors(LocalizationInterceptor)
     .lambda();
+
+
+
+//TODO:
+/**
+ * Table noch ne Übersetzung rein √
+ * Die Default Handler noch ne Übersetzung rein √
+ * Diesen einen Bug noch mit 7 checken √
+ * Die Englischen Übersetzungen noch fertig machen √
+ * Code aufräumen
+ * Qualifying crasht noch rum?
+ */

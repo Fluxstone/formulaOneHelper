@@ -18,15 +18,10 @@ class Race{
         try{
             let jsonData = sqlWorker.getLastRace()
 
-
-            console.log(jsonData);
-
             var obj = {
                 targetYear: jsonData[0].year,
                 targetRound: jsonData[0].round,
             };
-
-            console.log(obj);
             return obj;
         } catch (e) {
             console.error(e);
@@ -88,27 +83,22 @@ class Race{
                 second: secondPlaceDriver_NAME,
                 third: thirdPlaceDriver_NAME
             }
-            
-            console.log(obj);
             return obj;
         } catch (e) {
             console.error(e);
         }
     }
     
-    async getRaceTableAtTarget(mode){
+    async getRaceTableAtTarget(mode, locale){
         /*
         * Mode selection for follow up questions
         * Mode = 0: First 10 places
         * Mode = 1: All entries starting from 11
         */
         try{
-            //var response = await fetch(this.generateURL(this.year, this.raceNumber, 0));
-           //var jsonData = await response.json();
-            
             var response = "";
 
-            if(this.year=="current" && this.round=="last")
+            if(this.year=="current" && this.raceNumber=="last")
             {
                 var seasonInfo = this.getSeasonInfo();
                 var raceYear = (await seasonInfo).targetYear;
@@ -120,11 +110,8 @@ class Race{
                 raceRound= this.raceNumber;
             }
             
-            var raceId = sqlWorker.getRaceIdByYearAndRound(raceYear, raceRound)[0].raceid;
-            //console.log(raceId);
-            var jsonData = sqlWorker.getRaceTableByRaceId(raceId); //1061 2021 10
-            //console.log(jsonData);
-
+            var raceId = await sqlWorker.getRaceIdByYearAndRound(raceYear, raceRound)[0].raceid;
+            var jsonData = await sqlWorker.getRaceTableByRaceId(raceId); //1061 2021 10
 
             //Depending on mode either the first 10 entries will be read or all the remaining ones
             var startAtDriver, countTillDriver;
@@ -133,7 +120,7 @@ class Race{
                 countTillDriver = 10;
             } else if (mode == 1){
                 startAtDriver = 10;
-                countTillDriver = jsonData.MRData.RaceTable.Races[0].Results.length;
+                countTillDriver = jsonData.length;
             }
             
             for (var i = startAtDriver; i<countTillDriver; i++){
@@ -141,8 +128,14 @@ class Race{
                 var driver_lastName = jsonData[i].surname;  
                 
                 var i_ranking = i+1;
-                
-                response = response + "Platz " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
+
+                if(locale == "de-DE"){
+                    response = response + "Platz " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
+                } else if (locale == "en-US"){
+                    response = response + "Place " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
+                } else {
+                    response = response + "Platz " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
+                }    
             }
             return response;
         } catch (e) {
@@ -152,18 +145,14 @@ class Race{
     
     async getPlacementAtTarget(placement){
         try{
-            //var response = await fetch(this.generateURL(this.year, this.raceNumber, 0));
-            //var jsonData = await response.json();
 
             var seasonInfo = this.getSeasonInfo();
             var raceYear = (await seasonInfo).targetYear;
             var raceRound = (await seasonInfo).targetRound;
 
             var driver = sqlWorker.getRacePlacementByDate(raceYear, raceRound, placement);
-            //console.log(placement);
             
             var driver = driver.forename + " " + driver.surname;
-            //var response = "Platz " + placement + " belegt " + driver;
             
             return driver;
         } catch (e) {
@@ -177,10 +166,10 @@ class Race{
             var raceYear = (await seasonInfo).targetYear;
             var raceRound = (await seasonInfo).targetRound;
 
-            //console.log(raceYear + " " + raceRound);
+
 
             var raceId = sqlWorker.getRaceIdByYearAndRound(raceYear, raceRound)[0].raceid;
-            //console.log(raceId);
+
             var jsonData = sqlWorker.getQualifyingTopThreeByRaceId(raceId); //1061 2021 10
         
             var firstPlaceDriver = jsonData[0];
@@ -206,19 +195,16 @@ class Race{
         }
     }
     
-    async getQualifyingRaceTable(mode){
+    async getQualifyingRaceTable(mode, locale){
         try{
             var response = "";
 
             var seasonInfo = this.getSeasonInfo();
             var raceYear = (await seasonInfo).targetYear;
             var raceRound = (await seasonInfo).targetRound;
-            
+        
             var raceId = sqlWorker.getRaceIdByYearAndRound(raceYear, raceRound)[0].raceid;
-            //console.log(raceId);
             var jsonData = sqlWorker.getQualifyingTableByRaceId(raceId); //1061 2021 10
-            console.log(jsonData);
-            
             var textToSpeech = "";
             
             //Depending on mode either the first 10 entries will be read or all the remaining ones
@@ -228,7 +214,7 @@ class Race{
                 countTillDriver = 10;
             } else if (mode == 1){
                 startAtDriver = 10;
-                countTillDriver = jsonData.MRData.RaceTable.Races[0].Results.length;
+                countTillDriver = jsonData.length;
             }
             
             for (var i = startAtDriver; i<countTillDriver; i++){
@@ -237,7 +223,13 @@ class Race{
                 
                 var i_ranking = i+1;
                 
-                response = response + "Platz " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
+                if(locale == "de-DE"){
+                    response = response + "Platz " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
+                } else if (locale == "en-US"){
+                    response = response + "Place " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
+                } else {
+                    response = response + "Platz " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
+                }  
             }
             textToSpeech = response;
             return textToSpeech;
@@ -291,7 +283,7 @@ class Standings{
             var jsonData = await response.json();
             var standingsYear = jsonData.MRData.StandingsTable.season;
 
-            //console.log(jsonData.MRData.StandingsTable.season);
+
     
             return standingsYear;
         } catch (e) {
@@ -321,41 +313,43 @@ class Standings{
         return URL;
     }
     
-    async getDriverStandingsTable(mode){
+    //Locales:
+    //de-DE: German
+    //en-US: English
+    //Locale is parsed since amount of drivers is not known at the start of the request and is handled in a loop. Translation happens inside function.
+    async getDriverStandingsTable(mode, locale){
          try{
-            
-            
-            //var response = await fetch(this.generateURL(this.year, 0));
-            //var jsonData = await response.json();
-
-
             var standingsYear = await this.getSeasonYear();
-            //console.log(standingsYear)
-            var jsonData = sqlWorker.getDriverStandingsTableByYear(standingsYear);
-            //console.log(jsonData[1]);
+            var jsonData = await sqlWorker.getDriverStandingsTableByYear(standingsYear);
 
             var textToSpeech = "";
             
+
+
             var startAtDriver, countTillDriver;
             if(mode == 0){
                 startAtDriver = 0;
                 countTillDriver = 10;
             } else if (mode == 1){
                 startAtDriver = 10;
-                countTillDriver = jsonData.MRData.StandingsTable.StandingsLists[0].DriverStandings.length;
+                countTillDriver = jsonData.length;
             }
             
             for (var i = startAtDriver; i<countTillDriver; i++){
                 var driver_firstName = jsonData[i].forename;
                 var driver_lastName = jsonData[i].surname;
-                
-                //console.log(driver_firstName + " " +driver_lastName)
 
                 var i_ranking = i+1;
                 
-                textToSpeech = textToSpeech + "Platz " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
+                if(locale == "de-DE"){
+                    textToSpeech = textToSpeech + "Platz " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
+                } else if (locale == "en-US"){
+                    textToSpeech = textToSpeech + "Place " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
+                } else {
+                    textToSpeech = textToSpeech + "Platz " + i_ranking + ": " + driver_firstName + " " + driver_lastName +". ";
+                }        
             }
-            
+
             return textToSpeech;
         } catch (e) {
             console.error(e);
@@ -364,12 +358,8 @@ class Standings{
     
     async getDriverStandingsLeaders(){
         try{
-            var textToSpeech = "";
-            
             var standingsYear = await this.getSeasonYear();
-            //console.log(standingsYear)
-            var jsonData = sqlWorker.getDriverStandingsTableByYear(standingsYear);
-            //console.log(jsonData[1]);
+            var jsonData = await sqlWorker.getDriverStandingsTableByYear(standingsYear);
 
             var firstPlaceDriver = jsonData[0];
             var secondPlaceDriver = jsonData[1];
@@ -396,13 +386,8 @@ class Standings{
     
     async getDriverStandingsPlacement(placement){
         try{
-            var textToSpeech = "";
-            
             var standingsYear = await this.getSeasonYear();
-            //console.log(standingsYear)
-            var jsonData = sqlWorker.getDriverStandingsPlacementByYear(standingsYear, placement);
-            //console.log(jsonData[0]);
-
+            var jsonData = await sqlWorker.getDriverStandingsPlacementByYear(standingsYear, placement);
             var driver = jsonData[0].forename + " " + jsonData[0].surname;
 
             let obj = {
@@ -416,23 +401,28 @@ class Standings{
         }
     }
     
-    async getConstructorStandingsTable(){
+    //Locales:
+    //de-DE: German
+    //en-US: English
+    //Translation implementend here given that its unclear how many competitors are on the grid. Fallback locale is German
+    async getConstructorStandingsTable(locale){
         try{
             var textToSpeech = "";
             
             var standingsYear = await this.getSeasonYear();
-            //console.log(standingsYear)
             var jsonData = sqlWorker.getConstructorsTableByYear(standingsYear);
-            //console.log(jsonData);
-            
-            //var constructorInfo = jsonData.MRData.StandingsTable.StandingsLists[0].ConstructorStandings;
-            
+
             for (var i = 0; i<jsonData.length; i++){
                 var constructorName = jsonData[i].name;
-                
                 var i_ranking = i+1;
-                
-                textToSpeech = textToSpeech + "Platz " + i_ranking + ": " + constructorName +" mit " + jsonData[i].points + " Punkten. ";
+
+                if(locale == "de-DE"){
+                    textToSpeech = textToSpeech + "Platz " + i_ranking + ": " + constructorName +" mit " + jsonData[i].points + " Punkten. ";
+                } else if (locale == "en-US"){
+                    textToSpeech = textToSpeech + "Place " + i_ranking + ": " + constructorName +" with " + jsonData[i].points + " points. ";
+                } else {
+                    textToSpeech = textToSpeech + "Platz " + i_ranking + ": " + constructorName +" mit " + jsonData[i].points + " Punkten. ";
+                }
             }
             
             return textToSpeech;
@@ -442,13 +432,9 @@ class Standings{
     }
     
     async getConstructorStandingsLeaders(){
-        try{
-            var textToSpeech = "";
-            
+        try{   
             var standingsYear = await this.getSeasonYear();
-            //console.log(standingsYear)
-            var jsonData = sqlWorker.getConstructorsLeadersByYear(standingsYear);
-            console.log(jsonData);
+            var jsonData = await sqlWorker.getConstructorsLeadersByYear(standingsYear);
 
             var firstConstructor = jsonData[0];
             var secondConstructor = jsonData[1];
@@ -475,17 +461,10 @@ class Standings{
     
     async getConstructorStandingsPlacement(placement){
         try{
-            var textToSpeech = "";
-            
             var standingsYear = await this.getSeasonYear();
-            //console.log(standingsYear)
-            var jsonData = sqlWorker.getConstructorsPlacementByYear(standingsYear, placement);
-            console.log(jsonData);
-
-            var constructorInfo = jsonData[0];
-            textToSpeech = "Platz " + placement + " belegt " + constructorInfo.name + " mit " + constructorInfo.points + " Punkten.";
-
-            return textToSpeech;
+            var jsonData =await sqlWorker.getConstructorsPlacementByYear(standingsYear, placement);
+            var obj = jsonData[0];
+            return obj;
         } catch (e) {
             console.error(e);
         }
@@ -497,3 +476,12 @@ module.exports = {
     Standings
 };
 
+
+/*async function test(){
+    let standings = new Standings(2022);
+    let race = new Race("current", "last");
+
+    //console.log(await standings.getDriverStandingsTable(1, "en-US"));
+    console.log(await race.getQualifyingRaceTable(0, "de-DE"));
+}
+test();*/

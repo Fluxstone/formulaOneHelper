@@ -227,8 +227,8 @@ class Sql_Worker {
   getNextRaceDate(){
     var sqlQuery = `select year, round, name, date, time
     from races
-    where date < Curdate()+6
-    order by date desc
+    where date > Curdate()
+    order by date asc
     limit 1;`;
 
     const result = this.con.query(sqlQuery);
